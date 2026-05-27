@@ -1,21 +1,23 @@
 /**
  * Vercel Serverless Function — /api/weather
+ * CommonJS 형식 (Vercel Node.js 런타임 기본값)
  *
- * 환경변수 OPENWEATHER_API_KEY 를 서버에서 읽어
- * OpenWeatherMap API를 프록시합니다.
- *
- * Query params (둘 중 하나):
+ * Query params:
  *   ?city=Seoul
  *   ?lat=37.5665&lon=126.9780
  */
-export default async function handler(req, res) {
-  // CORS — 같은 Vercel 프로젝트에서만 허용 (필요 시 조정)
+module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
 
   const apiKey = process.env.OPENWEATHER_API_KEY;
 
   if (!apiKey) {
+    console.error('[weather] OPENWEATHER_API_KEY 환경변수 없음');
     return res.status(500).json({
       error: 'OPENWEATHER_API_KEY 환경변수가 설정되어 있지 않습니다.',
     });
@@ -33,19 +35,20 @@ export default async function handler(req, res) {
   }
 
   try {
+    console.log('[weather] 요청:', owmUrl.replace(apiKey, '***'));
     const owmRes = await fetch(owmUrl);
     const data   = await owmRes.json();
 
-    // OpenWeatherMap 에러를 그대로 전달
     if (!owmRes.ok) {
+      console.error('[weather] OWM 에러:', owmRes.status, data);
       return res.status(owmRes.status).json(data);
     }
 
-    // 캐시 30초 (선택 사항)
     res.setHeader('Cache-Control', 's-maxage=30, stale-while-revalidate');
     return res.status(200).json(data);
 
   } catch (err) {
-    return res.status(502).json({ error: '외부 API 호출에 실패했습니다.' });
+    console.error('[weather] fetch 실패:', err.message);
+    return res.status(502).json({ error: `외부 API 호출 실패: ${err.message}` });
   }
-}
+};
