@@ -5,25 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>날씨</title>
   <style>
-    /* ─── 리셋 & 폰트 ─── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
-
     :root {
-      --grad-clear:    linear-gradient(160deg, #1a6fc4 0%, #48a6f8 40%, #b8dffd 100%);
-      --grad-clouds:   linear-gradient(160deg, #4a5568 0%, #718096 50%, #a0aec0 100%);
-      --grad-rain:     linear-gradient(160deg, #2d3748 0%, #4a5568 50%, #718096 100%);
-      --grad-snow:     linear-gradient(160deg, #bee3f8 0%, #90cdf4 50%, #ebf8ff 100%);
-      --grad-thunder:  linear-gradient(160deg, #1a202c 0%, #2d3748 50%, #4a5568 100%);
-      --grad-mist:     linear-gradient(160deg, #718096 0%, #a0aec0 60%, #cbd5e0 100%);
-      --glass: rgba(255,255,255,0.18);
+      --grad-clear:   linear-gradient(160deg, #1a6fc4 0%, #48a6f8 40%, #b8dffd 100%);
+      --grad-clouds:  linear-gradient(160deg, #4a5568 0%, #718096 50%, #a0aec0 100%);
+      --grad-rain:    linear-gradient(160deg, #2d3748 0%, #4a5568 50%, #718096 100%);
+      --grad-snow:    linear-gradient(160deg, #bee3f8 0%, #90cdf4 50%, #ebf8ff 100%);
+      --grad-thunder: linear-gradient(160deg, #1a202c 0%, #2d3748 50%, #4a5568 100%);
+      --grad-mist:    linear-gradient(160deg, #718096 0%, #a0aec0 60%, #cbd5e0 100%);
+      --glass:        rgba(255,255,255,0.18);
       --glass-border: rgba(255,255,255,0.35);
     }
 
     html, body {
       height: 100%;
-      font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Noto Sans KR', 'Segoe UI', sans-serif;
     }
 
     body {
@@ -36,18 +33,13 @@
       overflow-x: hidden;
     }
 
-    /* ─── 배경 애니메이션 파티클 ─── */
-    .bg-particles {
-      position: fixed; inset: 0; z-index: 0; pointer-events: none;
-      overflow: hidden;
-    }
+    /* ─── 배경 파티클 ─── */
+    .bg-particles { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
     .particle {
-      position: absolute;
-      border-radius: 50%;
+      position: absolute; border-radius: 50%;
       background: rgba(255,255,255,0.15);
       animation: float linear infinite;
     }
-
     @keyframes float {
       0%   { transform: translateY(110vh) scale(0); opacity: 0; }
       10%  { opacity: 1; }
@@ -64,103 +56,62 @@
       display: flex; flex-direction: column;
     }
 
-    /* ─── 검색 영역 ─── */
+    /* ─── 검색 ─── */
     .search-bar {
       display: flex; align-items: center; gap: 10px;
       margin: 52px 20px 0;
     }
-
     .search-wrap {
-      flex: 1;
-      display: flex; align-items: center;
+      flex: 1; display: flex; align-items: center;
       background: var(--glass);
       border: 1px solid var(--glass-border);
-      border-radius: 50px;
-      padding: 0 18px;
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
+      border-radius: 50px; padding: 0 18px;
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
     }
-
     .search-icon { font-size: 16px; margin-right: 8px; opacity: 0.8; }
-
     .search-input {
-      flex: 1;
-      background: none; border: none; outline: none;
-      color: #fff;
-      font-size: 15px; font-family: inherit;
+      flex: 1; background: none; border: none; outline: none;
+      color: #fff; font-size: 15px; font-family: inherit;
       padding: 13px 0;
     }
     .search-input::placeholder { color: rgba(255,255,255,0.6); }
 
     .btn-loc {
-      width: 46px; height: 46px;
-      border-radius: 50%;
-      background: var(--glass);
-      border: 1px solid var(--glass-border);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      color: #fff; font-size: 20px;
-      cursor: pointer;
+      width: 46px; height: 46px; border-radius: 50%;
+      background: var(--glass); border: 1px solid var(--glass-border);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      color: #fff; font-size: 20px; cursor: pointer;
       display: flex; align-items: center; justify-content: center;
-      transition: background 0.2s;
-      flex-shrink: 0;
+      transition: background 0.2s; flex-shrink: 0;
     }
     .btn-loc:hover { background: rgba(255,255,255,0.28); }
 
-    /* ─── 메인 날씨 카드 ─── */
+    /* ─── 메인 카드 ─── */
     .main-card {
       margin: 28px 20px 0;
-      background: var(--glass);
-      border: 1px solid var(--glass-border);
-      border-radius: 32px;
-      padding: 32px 28px 28px;
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
+      background: var(--glass); border: 1px solid var(--glass-border);
+      border-radius: 32px; padding: 32px 28px 28px;
+      backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
       box-shadow: 0 8px 40px rgba(0,0,0,0.15);
     }
-
     .city-name {
-      color: #fff;
-      font-size: 20px; font-weight: 500;
-      display: flex; align-items: center; gap: 6px;
-      margin-bottom: 4px;
+      color: #fff; font-size: 20px; font-weight: 500;
+      display: flex; align-items: center; gap: 6px; margin-bottom: 4px;
     }
-    .city-name .pin { font-size: 16px; }
-
-    .date-text {
-      color: rgba(255,255,255,0.7);
-      font-size: 13px; margin-bottom: 24px;
-    }
-
-    .weather-main {
-      display: flex; align-items: center; justify-content: space-between;
-    }
-
+    .date-text { color: rgba(255,255,255,0.7); font-size: 13px; margin-bottom: 24px; }
+    .weather-main { display: flex; align-items: center; justify-content: space-between; }
     .temp-wrap .temp {
-      font-size: 80px; font-weight: 300;
-      color: #fff; line-height: 1;
-      letter-spacing: -4px;
+      font-size: 80px; font-weight: 300; color: #fff;
+      line-height: 1; letter-spacing: -4px;
     }
-    .temp-wrap .temp sup {
-      font-size: 32px; font-weight: 400;
-      vertical-align: super; letter-spacing: 0;
-    }
-
-    .temp-wrap .desc {
-      color: rgba(255,255,255,0.85);
-      font-size: 16px; margin-top: 6px;
-    }
-    .temp-wrap .feels {
-      color: rgba(255,255,255,0.65);
-      font-size: 13px; margin-top: 3px;
-    }
-
+    .temp-wrap .temp sup { font-size: 32px; font-weight: 400; vertical-align: super; letter-spacing: 0; }
+    .temp-wrap .desc { color: rgba(255,255,255,0.85); font-size: 16px; margin-top: 6px; }
+    .temp-wrap .feels { color: rgba(255,255,255,0.65); font-size: 13px; margin-top: 3px; }
     .weather-icon-big {
       font-size: 90px; line-height: 1;
       filter: drop-shadow(0 4px 12px rgba(0,0,0,0.2));
       animation: iconFloat 3s ease-in-out infinite;
     }
-
     @keyframes iconFloat {
       0%, 100% { transform: translateY(0); }
       50%       { transform: translateY(-8px); }
@@ -168,198 +119,57 @@
 
     /* ─── 통계 그리드 ─── */
     .stats-grid {
-      display: grid; grid-template-columns: 1fr 1fr;
-      gap: 12px;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
       margin: 16px 20px 0;
     }
-
     .stat-card {
-      background: var(--glass);
-      border: 1px solid var(--glass-border);
-      border-radius: 22px;
-      padding: 18px 20px;
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
+      background: var(--glass); border: 1px solid var(--glass-border);
+      border-radius: 22px; padding: 18px 20px;
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
     }
+    .stat-label { font-size: 12px; color: rgba(255,255,255,0.65); display: flex; align-items: center; gap: 5px; margin-bottom: 8px; }
+    .stat-value { font-size: 28px; font-weight: 500; color: #fff; }
+    .stat-unit { font-size: 14px; font-weight: 400; margin-left: 2px; }
+    .progress-bar { height: 5px; background: rgba(255,255,255,0.2); border-radius: 10px; margin-top: 8px; overflow: hidden; }
+    .progress-fill { height: 100%; border-radius: 10px; background: rgba(255,255,255,0.7); transition: width 1s ease; }
 
-    .stat-label {
-      font-size: 12px; color: rgba(255,255,255,0.65);
-      display: flex; align-items: center; gap: 5px;
-      margin-bottom: 8px;
-    }
-
-    .stat-value {
-      font-size: 28px; font-weight: 500;
-      color: #fff;
-    }
-
-    .stat-unit {
-      font-size: 14px; font-weight: 400;
-      margin-left: 2px;
-    }
-
-    /* ─── 진행 바 (습도, UV) ─── */
-    .progress-bar {
-      height: 5px;
-      background: rgba(255,255,255,0.2);
-      border-radius: 10px;
-      margin-top: 8px;
-      overflow: hidden;
-    }
-    .progress-fill {
-      height: 100%; border-radius: 10px;
-      background: rgba(255,255,255,0.7);
-      transition: width 1s ease;
-    }
-
-    /* ─── 일출/일몰 카드 ─── */
+    /* ─── 일출/일몰 ─── */
     .sun-card {
       margin: 12px 20px 0;
-      background: var(--glass);
-      border: 1px solid var(--glass-border);
-      border-radius: 22px;
-      padding: 18px 20px;
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
+      background: var(--glass); border: 1px solid var(--glass-border);
+      border-radius: 22px; padding: 18px 20px;
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
       display: flex; align-items: center; justify-content: space-around;
     }
-
-    .sun-item {
-      text-align: center;
-    }
+    .sun-item { text-align: center; }
     .sun-item .sun-icon { font-size: 28px; }
-    .sun-item .sun-label {
-      font-size: 11px; color: rgba(255,255,255,0.65);
-      margin: 4px 0 2px;
-    }
-    .sun-item .sun-time {
-      font-size: 17px; font-weight: 500; color: #fff;
-    }
+    .sun-item .sun-label { font-size: 11px; color: rgba(255,255,255,0.65); margin: 4px 0 2px; }
+    .sun-item .sun-time { font-size: 17px; font-weight: 500; color: #fff; }
+    .sun-divider { width: 1px; height: 50px; background: rgba(255,255,255,0.25); }
 
-    .sun-divider {
-      width: 1px; height: 50px;
-      background: rgba(255,255,255,0.25);
-    }
-
-    /* ─── API 키 설정 모달 ─── */
-    .modal-overlay {
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,0.5);
-      backdrop-filter: blur(4px);
-      z-index: 100;
-      display: flex; align-items: flex-end; justify-content: center;
-    }
-    .modal-overlay.hidden { display: none; }
-
-    .modal-sheet {
-      width: 100%; max-width: 430px;
-      background: #1a2340;
-      border-radius: 28px 28px 0 0;
-      padding: 32px 24px 48px;
-    }
-
-    .modal-sheet h3 {
-      color: #fff; font-size: 18px; margin-bottom: 8px;
-    }
-    .modal-sheet p {
-      color: rgba(255,255,255,0.6); font-size: 13px; line-height: 1.6;
-      margin-bottom: 20px;
-    }
-    .modal-sheet a { color: #60a5fa; }
-
-    .modal-input {
-      width: 100%;
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.2);
-      border-radius: 14px;
-      padding: 14px 18px;
-      color: #fff; font-size: 14px; font-family: monospace;
-      outline: none;
-      margin-bottom: 14px;
-    }
-    .modal-input:focus { border-color: rgba(255,255,255,0.5); }
-
-    .modal-btn {
-      width: 100%;
-      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-      border: none; border-radius: 14px;
-      color: #fff; font-size: 16px; font-weight: 500;
-      padding: 15px;
-      cursor: pointer;
-      font-family: inherit;
-    }
-
-    /* ─── 에러 / 로딩 ─── */
+    /* ─── 상태 메시지 ─── */
     .status-msg {
-      margin: 40px 20px 0;
-      text-align: center;
-      color: rgba(255,255,255,0.8);
-      font-size: 15px;
-      line-height: 1.7;
+      margin: 40px 20px 0; text-align: center;
+      color: rgba(255,255,255,0.8); font-size: 15px; line-height: 1.7;
     }
     .status-msg .emoji { font-size: 48px; display: block; margin-bottom: 12px; }
-
     .spinner {
       width: 40px; height: 40px;
-      border: 3px solid rgba(255,255,255,0.3);
-      border-top-color: #fff;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
+      border: 3px solid rgba(255,255,255,0.3); border-top-color: #fff;
+      border-radius: 50%; animation: spin 0.8s linear infinite;
       margin: 40px auto 16px;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    .refresh-time { text-align: center; color: rgba(255,255,255,0.5); font-size: 12px; margin-top: 20px; }
+
     .hidden { display: none !important; }
-
-    /* ─── 하단 버튼 ─── */
-    .btn-settings {
-      position: fixed; bottom: 24px; right: 20px;
-      width: 44px; height: 44px;
-      border-radius: 50%;
-      background: rgba(0,0,0,0.25);
-      border: 1px solid rgba(255,255,255,0.3);
-      color: #fff; font-size: 18px;
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      backdrop-filter: blur(8px);
-      z-index: 10;
-    }
-
-    /* ─── 새로고침 버튼 ─── */
-    .refresh-time {
-      text-align: center;
-      color: rgba(255,255,255,0.5);
-      font-size: 12px;
-      margin-top: 20px;
-    }
   </style>
 </head>
 <body>
 
-<!-- 배경 파티클 -->
 <div class="bg-particles" id="bgParticles"></div>
 
-<!-- API 키 설정 모달 -->
-<div class="modal-overlay" id="modalOverlay">
-  <div class="modal-sheet">
-    <h3>🔑 OpenWeatherMap API 키 입력</h3>
-    <p>
-      무료 API 키를 발급받으세요:<br>
-      <a href="https://openweathermap.org/api" target="_blank">openweathermap.org/api</a><br><br>
-      가입 후 "Current Weather Data" 무료 플랜을 구독하면 분당 60회 호출이 가능합니다.
-    </p>
-    <input
-      class="modal-input"
-      id="apiKeyInput"
-      type="text"
-      placeholder="API 키를 붙여넣으세요..."
-      autocomplete="off"
-    />
-    <button class="modal-btn" id="saveApiKey">저장하고 날씨 불러오기</button>
-  </div>
-</div>
-
-<!-- 앱 본체 -->
 <div class="app">
 
   <!-- 검색 -->
@@ -367,12 +177,9 @@
     <div class="search-wrap">
       <span class="search-icon">🔍</span>
       <input
-        class="search-input"
-        id="searchInput"
-        type="text"
-        placeholder="도시 이름 검색..."
-        autocomplete="off"
-        enterkeyhint="search"
+        class="search-input" id="searchInput"
+        type="text" placeholder="도시 이름 검색 (예: Seoul, Tokyo)..."
+        autocomplete="off" enterkeyhint="search"
       />
     </div>
     <button class="btn-loc" id="locBtn" title="현재 위치">📍</button>
@@ -395,11 +202,10 @@
   <!-- 날씨 콘텐츠 -->
   <div id="weatherView" class="hidden">
 
-    <!-- 메인 카드 -->
     <div class="main-card">
       <div class="city-name">
-        <span class="pin">📍</span>
-        <span id="cityName">서울</span>
+        <span>📍</span>
+        <span id="cityName">-</span>
       </div>
       <div class="date-text" id="dateText">-</div>
 
@@ -413,38 +219,27 @@
       </div>
     </div>
 
-    <!-- 통계 그리드 -->
     <div class="stats-grid">
-
       <div class="stat-card">
         <div class="stat-label">💧 습도</div>
         <div class="stat-value"><span id="humidity">--</span><span class="stat-unit">%</span></div>
-        <div class="progress-bar">
-          <div class="progress-fill" id="humidityBar" style="width:0%"></div>
-        </div>
+        <div class="progress-bar"><div class="progress-fill" id="humidityBar" style="width:0%"></div></div>
       </div>
-
       <div class="stat-card">
         <div class="stat-label">💨 풍속</div>
         <div class="stat-value"><span id="windSpeed">--</span><span class="stat-unit">m/s</span></div>
-        <div class="progress-bar">
-          <div class="progress-fill" id="windBar" style="width:0%"></div>
-        </div>
+        <div class="progress-bar"><div class="progress-fill" id="windBar" style="width:0%"></div></div>
       </div>
-
       <div class="stat-card">
         <div class="stat-label">👁️ 가시거리</div>
         <div class="stat-value"><span id="visibility">--</span><span class="stat-unit">km</span></div>
       </div>
-
       <div class="stat-card">
         <div class="stat-label">🌡️ 기압</div>
         <div class="stat-value"><span id="pressure">--</span><span class="stat-unit">hPa</span></div>
       </div>
-
     </div>
 
-    <!-- 일출/일몰 -->
     <div class="sun-card">
       <div class="sun-item">
         <div class="sun-icon">🌅</div>
@@ -460,162 +255,130 @@
     </div>
 
     <div class="refresh-time" id="refreshTime"></div>
+  </div>
 
-  </div><!-- /weatherView -->
-
-</div><!-- /app -->
-
-<button class="btn-settings" id="settingsBtn" title="API 키 설정">⚙️</button>
+</div>
 
 <script>
-// ─── 상수 & 상태 ───────────────────────────────────────────
-const STORAGE_KEY = 'owm_api_key';
-const CITY_KEY    = 'last_city';
+// ─── 상수 ────────────────────────────────────────────────
+const CITY_KEY = 'last_city';
+let lastCity   = localStorage.getItem(CITY_KEY) || '';
 
-let apiKey = localStorage.getItem(STORAGE_KEY) || '';
-let lastCity = localStorage.getItem(CITY_KEY) || '';
-
-// ─── 날씨 코드 → 이모지 & 그라디언트 매핑 ────────────────
+// ─── 날씨 코드 → 이모지 & 배경 ──────────────────────────
 function getWeatherMeta(id, isDay = true) {
   if (id >= 200 && id < 300) return { icon: '⛈️', grad: 'var(--grad-thunder)' };
   if (id >= 300 && id < 400) return { icon: '🌦️', grad: 'var(--grad-rain)' };
   if (id >= 500 && id < 600) {
-    if (id === 511) return { icon: '🌨️', grad: 'var(--grad-snow)' };
+    if (id === 511)           return { icon: '🌨️', grad: 'var(--grad-snow)' };
     return { icon: id >= 502 ? '🌧️' : '🌦️', grad: 'var(--grad-rain)' };
   }
   if (id >= 600 && id < 700) return { icon: '❄️', grad: 'var(--grad-snow)' };
   if (id >= 700 && id < 800) return { icon: '🌫️', grad: 'var(--grad-mist)' };
-  if (id === 800) return { icon: isDay ? '☀️' : '🌙', grad: 'var(--grad-clear)' };
-  if (id === 801) return { icon: isDay ? '🌤️' : '🌙', grad: 'var(--grad-clear)' };
-  if (id === 802) return { icon: '⛅', grad: 'var(--grad-clouds)' };
-  if (id >= 803)  return { icon: '☁️', grad: 'var(--grad-clouds)' };
+  if (id === 800)  return { icon: isDay ? '☀️' : '🌙', grad: 'var(--grad-clear)' };
+  if (id === 801)  return { icon: isDay ? '🌤️' : '🌙', grad: 'var(--grad-clear)' };
+  if (id === 802)  return { icon: '⛅', grad: 'var(--grad-clouds)' };
+  if (id >= 803)   return { icon: '☁️', grad: 'var(--grad-clouds)' };
   return { icon: '🌈', grad: 'var(--grad-clear)' };
 }
 
 // ─── 시간 포맷 ────────────────────────────────────────────
 function fmtTime(unixSec, offsetSec) {
   const d = new Date((unixSec + offsetSec) * 1000);
-  const h = String(d.getUTCHours()).padStart(2,'0');
-  const m = String(d.getUTCMinutes()).padStart(2,'0');
-  return `${h}:${m}`;
+  return `${String(d.getUTCHours()).padStart(2,'0')}:${String(d.getUTCMinutes()).padStart(2,'0')}`;
 }
-
 function fmtDate(offsetSec) {
   const d = new Date((Date.now()/1000 + offsetSec) * 1000);
   const days = ['일','월','화','수','목','금','토'];
-  const months = d.getUTCMonth()+1;
-  const dates  = d.getUTCDate();
-  const day    = days[d.getUTCDay()];
-  return `${months}월 ${dates}일 (${day})`;
+  return `${d.getUTCMonth()+1}월 ${d.getUTCDate()}일 (${days[d.getUTCDay()]})`;
 }
 
-// ─── UI 전환 ──────────────────────────────────────────────
+// ─── UI 전환 ─────────────────────────────────────────────
+const $ = id => document.getElementById(id);
 function showLoading() {
-  document.getElementById('loadingView').classList.remove('hidden');
-  document.getElementById('errorView').classList.add('hidden');
-  document.getElementById('weatherView').classList.add('hidden');
+  $('loadingView').classList.remove('hidden');
+  $('errorView').classList.add('hidden');
+  $('weatherView').classList.add('hidden');
 }
 function showError(msg, emoji = '😕') {
-  document.getElementById('loadingView').classList.add('hidden');
-  document.getElementById('errorView').classList.remove('hidden');
-  document.getElementById('weatherView').classList.add('hidden');
-  document.getElementById('errorMsg').textContent = msg;
-  document.getElementById('errorEmoji').textContent = emoji;
+  $('loadingView').classList.add('hidden');
+  $('errorView').classList.remove('hidden');
+  $('weatherView').classList.add('hidden');
+  $('errorMsg').textContent  = msg;
+  $('errorEmoji').textContent = emoji;
 }
 function showWeather() {
-  document.getElementById('loadingView').classList.add('hidden');
-  document.getElementById('errorView').classList.add('hidden');
-  document.getElementById('weatherView').classList.remove('hidden');
+  $('loadingView').classList.add('hidden');
+  $('errorView').classList.add('hidden');
+  $('weatherView').classList.remove('hidden');
 }
 
-// ─── 날씨 데이터 렌더링 ───────────────────────────────────
+// ─── 렌더링 ───────────────────────────────────────────────
 function renderWeather(data) {
-  const now  = Date.now() / 1000;
+  const now   = Date.now() / 1000;
   const isDay = now > data.sys.sunrise && now < data.sys.sunset;
-  const meta = getWeatherMeta(data.weather[0].id, isDay);
+  const meta  = getWeatherMeta(data.weather[0].id, isDay);
 
-  // 배경 그라디언트
   document.body.style.background = meta.grad;
 
-  // 메인 카드
-  document.getElementById('cityName').textContent =
-    `${data.name}, ${data.sys.country}`;
-  document.getElementById('dateText').textContent =
-    fmtDate(data.timezone);
-  document.getElementById('tempVal').textContent =
-    Math.round(data.main.temp);
-  document.getElementById('weatherDesc').textContent =
-    data.weather[0].description;
-  document.getElementById('feelsLike').textContent =
-    `체감 ${Math.round(data.main.feels_like)}°C`;
-  document.getElementById('weatherIcon').textContent = meta.icon;
+  $('cityName').textContent    = `${data.name}, ${data.sys.country}`;
+  $('dateText').textContent    = fmtDate(data.timezone);
+  $('tempVal').textContent     = Math.round(data.main.temp);
+  $('weatherDesc').textContent = data.weather[0].description;
+  $('feelsLike').textContent   = `체감 ${Math.round(data.main.feels_like)}°C`;
+  $('weatherIcon').textContent = meta.icon;
 
-  // 통계
-  const hum = data.main.humidity;
+  const hum  = data.main.humidity;
   const wind = data.wind.speed;
-  document.getElementById('humidity').textContent = hum;
-  document.getElementById('humidityBar').style.width = hum + '%';
-  document.getElementById('windSpeed').textContent = wind.toFixed(1);
-  document.getElementById('windBar').style.width = Math.min(wind / 20 * 100, 100) + '%';
-  document.getElementById('visibility').textContent =
-    ((data.visibility || 0) / 1000).toFixed(1);
-  document.getElementById('pressure').textContent = data.main.pressure;
+  $('humidity').textContent    = hum;
+  $('humidityBar').style.width = hum + '%';
+  $('windSpeed').textContent   = wind.toFixed(1);
+  $('windBar').style.width     = Math.min(wind / 20 * 100, 100) + '%';
+  $('visibility').textContent  = ((data.visibility || 0) / 1000).toFixed(1);
+  $('pressure').textContent    = data.main.pressure;
+  $('sunrise').textContent     = fmtTime(data.sys.sunrise, data.timezone);
+  $('sunset').textContent      = fmtTime(data.sys.sunset,  data.timezone);
 
-  // 일출/일몰
-  document.getElementById('sunrise').textContent =
-    fmtTime(data.sys.sunrise, data.timezone);
-  document.getElementById('sunset').textContent =
-    fmtTime(data.sys.sunset, data.timezone);
-
-  // 새로고침 시각
   const now2 = new Date();
-  document.getElementById('refreshTime').textContent =
+  $('refreshTime').textContent =
     `마지막 업데이트: ${now2.getHours()}:${String(now2.getMinutes()).padStart(2,'0')}`;
 
   showWeather();
 }
 
-// ─── API 호출: 도시명 ─────────────────────────────────────
-async function fetchByCity(city) {
+// ─── API 호출 (서버 프록시 경유) ─────────────────────────
+async function fetchWeather(params) {
   showLoading();
+  const qs  = new URLSearchParams(params).toString();
   try {
-    const res = await fetch(
-      `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(city)}&appid=${apiKey}&units=metric&lang=kr`
-    );
-    if (res.status === 401) { showApiKeyModal(); return; }
-    if (res.status === 404) { showError('도시를 찾을 수 없습니다. 영문 도시명으로 검색해보세요.', '🏙️'); return; }
-    if (!res.ok)             { showError('날씨 서버 오류가 발생했습니다.', '🌐'); return; }
+    const res  = await fetch(`/api/weather?${qs}`);
     const data = await res.json();
-    localStorage.setItem(CITY_KEY, city);
-    lastCity = city;
+
+    if (res.status === 404) { showError('도시를 찾을 수 없습니다.\n영문 도시명으로 검색해보세요.', '🏙️'); return; }
+    if (res.status === 500) { showError(data.error || '서버 설정 오류가 발생했습니다.', '⚙️'); return; }
+    if (!res.ok)            { showError('날씨 서버 오류가 발생했습니다.', '🌐'); return; }
+
+    if (params.city) {
+      localStorage.setItem(CITY_KEY, params.city);
+      lastCity = params.city;
+    } else {
+      localStorage.setItem(CITY_KEY, data.name);
+      lastCity = data.name;
+    }
+
     renderWeather(data);
-  } catch (e) {
+  } catch {
     showError('네트워크 연결을 확인해주세요.', '📡');
   }
 }
 
-// ─── API 호출: 좌표 ───────────────────────────────────────
-async function fetchByCoords(lat, lon) {
-  showLoading();
-  try {
-    const res = await fetch(
-      `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric&lang=kr`
-    );
-    if (res.status === 401) { showApiKeyModal(); return; }
-    if (!res.ok)             { showError('날씨 서버 오류가 발생했습니다.', '🌐'); return; }
-    const data = await res.json();
-    localStorage.setItem(CITY_KEY, data.name);
-    lastCity = data.name;
-    renderWeather(data);
-  } catch (e) {
-    showError('네트워크 연결을 확인해주세요.', '📡');
-  }
-}
+function fetchByCity(city)       { fetchWeather({ city }); }
+function fetchByCoords(lat, lon) { fetchWeather({ lat, lon }); }
 
 // ─── 현재 위치 ────────────────────────────────────────────
 function getLocation() {
   if (!navigator.geolocation) {
-    showError('이 브라우저는 위치 서비스를 지원하지 않습니다.', '📍');
+    if (lastCity) fetchByCity(lastCity);
+    else showError('위치 서비스를 지원하지 않는 브라우저입니다.\n도시명을 검색해보세요.', '📍');
     return;
   }
   showLoading();
@@ -629,19 +392,9 @@ function getLocation() {
   );
 }
 
-// ─── 모달 ─────────────────────────────────────────────────
-function showApiKeyModal() {
-  document.getElementById('modalOverlay').classList.remove('hidden');
-  document.getElementById('apiKeyInput').value = apiKey;
-  document.getElementById('apiKeyInput').focus();
-}
-function hideApiKeyModal() {
-  document.getElementById('modalOverlay').classList.add('hidden');
-}
-
-// ─── 배경 파티클 생성 ─────────────────────────────────────
+// ─── 배경 파티클 ─────────────────────────────────────────
 function createParticles() {
-  const container = document.getElementById('bgParticles');
+  const container = $('bgParticles');
   for (let i = 0; i < 12; i++) {
     const p = document.createElement('div');
     p.className = 'particle';
@@ -656,48 +409,21 @@ function createParticles() {
   }
 }
 
-// ─── 이벤트 ───────────────────────────────────────────────
-document.getElementById('locBtn').addEventListener('click', getLocation);
+// ─── 이벤트 ──────────────────────────────────────────────
+$('locBtn').addEventListener('click', getLocation);
 
-document.getElementById('settingsBtn').addEventListener('click', showApiKeyModal);
-
-document.getElementById('saveApiKey').addEventListener('click', () => {
-  const val = document.getElementById('apiKeyInput').value.trim();
-  if (!val) return;
-  apiKey = val;
-  localStorage.setItem(STORAGE_KEY, apiKey);
-  hideApiKeyModal();
-  if (lastCity) fetchByCity(lastCity);
-  else getLocation();
-});
-
-document.getElementById('apiKeyInput').addEventListener('keydown', e => {
-  if (e.key === 'Enter') document.getElementById('saveApiKey').click();
-});
-
-document.getElementById('searchInput').addEventListener('keydown', e => {
+$('searchInput').addEventListener('keydown', e => {
   if (e.key === 'Enter') {
     const q = e.target.value.trim();
     if (q) fetchByCity(q);
   }
 });
 
-// 모달 외부 클릭 닫기
-document.getElementById('modalOverlay').addEventListener('click', e => {
-  if (e.target === document.getElementById('modalOverlay')) hideApiKeyModal();
-});
-
-// ─── 초기화 ───────────────────────────────────────────────
+// ─── 초기화 ──────────────────────────────────────────────
 createParticles();
 
-if (!apiKey) {
-  showApiKeyModal();
-  document.getElementById('loadingView').classList.add('hidden');
-} else if (lastCity) {
-  fetchByCity(lastCity);
-} else {
-  getLocation();
-}
+if (lastCity) fetchByCity(lastCity);
+else          getLocation();
 </script>
 </body>
 </html>
