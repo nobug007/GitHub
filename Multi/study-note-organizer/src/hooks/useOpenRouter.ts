@@ -24,9 +24,13 @@ export async function callOpenRouter(
   const modelName = getModelName(modelId);
 
   try {
-    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    // dev: Vite proxy (/openrouter → https://openrouter.ai) to avoid CORS preflight issues
+    const base = import.meta.env.DEV
+      ? '/openrouter/api/v1/chat/completions'
+      : 'https://openrouter.ai/api/v1/chat/completions';
+
+    const res = await fetch(base, {
       method: 'POST',
-      credentials: 'omit',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${apiKey}`,
