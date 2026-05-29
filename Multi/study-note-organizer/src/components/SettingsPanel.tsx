@@ -16,7 +16,7 @@ export default function SettingsPanel() {
   function save() {
     dispatch({
       type: 'SET_SETTINGS',
-      payload: { apiKey: localKey, baseModel1: localB1, baseModel2: localB2, mergeModel: localMerge },
+      payload: { apiKey: localKey.trim(), baseModel1: localB1, baseModel2: localB2, mergeModel: localMerge },
     });
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);

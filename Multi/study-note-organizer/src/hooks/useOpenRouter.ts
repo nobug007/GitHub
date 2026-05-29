@@ -81,14 +81,22 @@ export async function callOpenRouter(
       tokenUsage: usage,
       status: 'success',
     };
-  } catch {
+  } catch (err) {
+    const raw = err instanceof Error ? err.message : String(err);
+    console.error(`[OpenRouter] ${modelId}:`, err);
+
+    let errorMessage = `네트워크 오류: ${raw}`;
+    if (raw.toLowerCase().includes('failed to fetch') || raw.toLowerCase().includes('networkerror')) {
+      errorMessage = 'API 호출 실패. 브라우저 콘솔(F12 → Console)에서 실제 오류를 확인하세요.';
+    }
+
     return {
       modelId,
       modelName,
       content: '',
       latencyMs: Date.now() - start,
       status: 'error',
-      errorMessage: '네트워크 연결을 확인하세요.',
+      errorMessage,
     };
   }
 }
