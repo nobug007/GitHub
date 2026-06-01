@@ -1,0 +1,14 @@
+{
+  "name": "mag-ai-mvp-builder",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node server/index.js",
+    "start": "node server/index.js",
+    "check": "node --check server/index.js && node --check server/app.js && node --check server/pipeline/orchestrator.js",
+    "test": "node --test",
+    "verify": "npm run check && npm test"
+  }
+}
+
