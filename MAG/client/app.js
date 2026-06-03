@@ -1,7 +1,16 @@
 const app = document.querySelector("#app");
 
+function relativeUrl(path) {
+  return String(path).replace(/^\/+/, "");
+}
+
+function deliverableUrl(file) {
+  return relativeUrl(`/deliverables/${encodeURIComponent(file)}`);
+}
+
 const state = {
   page: 1,
+  startedAt: Date.now(),
   plan: "premium",
   premiumSkipSteps: [],
   useLiveAI: false,
@@ -60,16 +69,16 @@ const state = {
 
 async function boot() {
   const [problemResponse, personaResponse, scenarioResponse, featureResponse, workflowResponse, uiuxResponse, codeResponse, mediaResponse, businessResponse, presentationResponse] = await Promise.all([
-    fetch("/api/problem-definition/ais"),
-    fetch("/api/persona/ais"),
-    fetch("/api/scenario/ais"),
-    fetch("/api/features/ais"),
-    fetch("/api/workflow-design/ais"),
-    fetch("/api/uiux-design/ais"),
-    fetch("/api/code-generation/ais"),
-    fetch("/api/media-generation/ais"),
-    fetch("/api/business-analysis/ais"),
-    fetch("/api/presentation-generation/ais")
+    fetch(relativeUrl("/api/problem-definition/ais")),
+    fetch(relativeUrl("/api/persona/ais")),
+    fetch(relativeUrl("/api/scenario/ais")),
+    fetch(relativeUrl("/api/features/ais")),
+    fetch(relativeUrl("/api/workflow-design/ais")),
+    fetch(relativeUrl("/api/uiux-design/ais")),
+    fetch(relativeUrl("/api/code-generation/ais")),
+    fetch(relativeUrl("/api/media-generation/ais")),
+    fetch(relativeUrl("/api/business-analysis/ais")),
+    fetch(relativeUrl("/api/presentation-generation/ais"))
   ]);
   state.aiList = await problemResponse.json();
   state.personaAIList = await personaResponse.json();
@@ -837,7 +846,7 @@ function renderPresentationOutputPage() {
 
 function renderPresentationFilesPage() {
   const selectedVideo = state.mediaOutputs[state.finalMediaIndex];
-  const selectedVideoUrl = selectedVideo?.videoUrl || "/deliverables/MAG-Future-MVP-Demo.mp4";
+  const selectedVideoUrl = selectedVideo?.videoUrl || deliverableUrl("MAG-Future-MVP-Demo.mp4");
   const selectedVideoTarget = selectedVideo?.videoUrl ? ` target="_blank" rel="noreferrer"` : "";
   app.innerHTML = `
     <section class="page">
@@ -853,7 +862,7 @@ function renderPresentationFilesPage() {
                 <h3>${escapeHtml(file.name)}</h3>
                 <p>${escapeHtml(file.description)}</p>
               </div>
-              <a class="download-link" href="/deliverables/${encodeURIComponent(file.file)}">PPTX 다운로드</a>
+              <a class="download-link" href="${escapeHtml(deliverableUrl(file.file))}">PPTX 다운로드</a>
             </article>
           `).join("")}
         </div>
@@ -943,7 +952,7 @@ function renderMediaPreviewPage() {
 async function refreshMediaTask(index) {
   const output = state.mediaOutputs[index];
   if (!output?.taskId) return;
-  const response = await fetch(`/api/media-generation/tasks/${encodeURIComponent(output.taskId)}`);
+  const response = await fetch(relativeUrl(`/api/media-generation/tasks/${encodeURIComponent(output.taskId)}`));
   const task = await response.json();
   if (!response.ok) return showError(task.error || "영상 상태를 확인하지 못했습니다.");
   output.taskStatus = task.status || "UNKNOWN";
@@ -1054,6 +1063,10 @@ function mountSidebar(activeStep) {
         </li>
       `).join("")}
     </ol>
+    <div class="workflow-elapsed">
+      <span>전체 소요 시간</span>
+      <strong data-elapsed-time>0초</strong>
+    </div>
     <button class="ai-connection-toggle ${state.useLiveAI ? "live" : ""}" id="aiConnectionToggle" type="button" aria-pressed="${state.useLiveAI}">
       <span class="ai-connection-dot"></span>
       <span>
@@ -1063,6 +1076,10 @@ function mountSidebar(activeStep) {
     </button>
   `;
   app.prepend(sidebar);
+  updateElapsedTime();
+  if (!window.magElapsedTimer) {
+    window.magElapsedTimer = window.setInterval(updateElapsedTime, 1000);
+  }
   document.querySelector("#aiConnectionToggle").addEventListener("click", () => {
     state.useLiveAI = !state.useLiveAI;
     render();
@@ -1074,6 +1091,20 @@ function mountSidebar(activeStep) {
         ? [...new Set([...state.premiumSkipSteps, step])].sort((a, b) => a - b)
         : state.premiumSkipSteps.filter((value) => value !== step);
     });
+  });
+}
+
+function formatElapsed(ms) {
+  const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  if (minutes < 1) return `${seconds}초`;
+  return `${minutes}분 ${String(seconds).padStart(2, "0")}초`;
+}
+
+function updateElapsedTime() {
+  document.querySelectorAll("[data-elapsed-time]").forEach((element) => {
+    element.textContent = formatElapsed(Date.now() - state.startedAt);
   });
 }
 
@@ -1210,7 +1241,7 @@ function firstThree(list) {
 }
 
 async function postJSON(url, body) {
-  const response = await fetch(url, {
+  const response = await fetch(relativeUrl(url), {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify(body)
@@ -1326,7 +1357,7 @@ async function runAutomatedPipeline(stopAt = "files", startStage = 1) {
   });
   state.presentationOutputs = presentation.outputs;
   state.presentationPrompt = presentation.prompt;
-  const filesResponse = await fetch("/api/presentation-generation/files");
+  const filesResponse = await fetch(relativeUrl("/api/presentation-generation/files"));
   const files = await filesResponse.json();
   if (!filesResponse.ok) throw new Error(files.error);
   state.presentationFiles = files;
@@ -1593,7 +1624,7 @@ async function loadPresentationFiles() {
   button.disabled = true;
   button.textContent = "파일 준비 중...";
   try {
-    const response = await fetch("/api/presentation-generation/files");
+    const response = await fetch(relativeUrl("/api/presentation-generation/files"));
     const data = await response.json();
     if (!response.ok) throw new Error(data.error);
     state.presentationFiles = data;
@@ -1617,7 +1648,7 @@ async function submitJSON({ buttonId, loadingText, url, body, onSuccess }) {
   button.disabled = true;
   button.textContent = loadingText;
   try {
-    const response = await fetch(url, {
+    const response = await fetch(relativeUrl(url), {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(body)

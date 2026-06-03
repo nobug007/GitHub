@@ -43,147 +43,148 @@ export function createApp() {
   return http.createServer(async (req, res) => {
     try {
       const url = new URL(req.url, `http://${req.headers.host || "127.0.0.1"}`);
+      const routePath = normalizeRoutePath(url.pathname);
 
-      if (req.method === "GET" && url.pathname === "/api/health") {
+      if (req.method === "GET" && routePath === "/api/health") {
         return json(res, 200, { ok: true, providers: providers.length, stages: stages.length });
       }
 
-      if (req.method === "GET" && url.pathname === "/api/providers/status") {
+      if (req.method === "GET" && routePath === "/api/providers/status") {
         return json(res, 200, providerStatus());
       }
 
-      if (req.method === "GET" && url.pathname === "/api/workflow") {
+      if (req.method === "GET" && routePath === "/api/workflow") {
         return json(res, 200, { providers, stages });
       }
 
-      if (req.method === "GET" && url.pathname === "/api/problem-definition/ais") {
+      if (req.method === "GET" && routePath === "/api/problem-definition/ais") {
         return json(res, 200, listProblemDefinitionAIs());
       }
 
-      if (req.method === "POST" && url.pathname === "/api/problem-definition/run") {
+      if (req.method === "POST" && routePath === "/api/problem-definition/run") {
         return json(res, 200, await runProblemDefinition(await body(req)));
       }
 
-      if (req.method === "POST" && url.pathname === "/api/problem-definition/merge") {
+      if (req.method === "POST" && routePath === "/api/problem-definition/merge") {
         return json(res, 200, mergeProblemDefinition(await body(req)));
       }
 
-      if (req.method === "GET" && url.pathname === "/api/persona/ais") {
+      if (req.method === "GET" && routePath === "/api/persona/ais") {
         return json(res, 200, listPersonaAIs());
       }
 
-      if (req.method === "POST" && url.pathname === "/api/persona/run") {
+      if (req.method === "POST" && routePath === "/api/persona/run") {
         return json(res, 200, await runPersonaAnalysis(await body(req)));
       }
 
-      if (req.method === "POST" && url.pathname === "/api/persona/merge") {
+      if (req.method === "POST" && routePath === "/api/persona/merge") {
         return json(res, 200, mergePersonaAnalysis(await body(req)));
       }
 
-      if (req.method === "GET" && url.pathname === "/api/scenario/ais") {
+      if (req.method === "GET" && routePath === "/api/scenario/ais") {
         return json(res, 200, listScenarioAIs());
       }
 
-      if (req.method === "POST" && url.pathname === "/api/scenario/run") {
+      if (req.method === "POST" && routePath === "/api/scenario/run") {
         return json(res, 200, await runScenarioAnalysis(await body(req)));
       }
 
-      if (req.method === "POST" && url.pathname === "/api/scenario/merge") {
+      if (req.method === "POST" && routePath === "/api/scenario/merge") {
         return json(res, 200, mergeScenarioAnalysis(await body(req)));
       }
 
-      if (req.method === "GET" && url.pathname === "/api/features/ais") {
+      if (req.method === "GET" && routePath === "/api/features/ais") {
         return json(res, 200, listFeatureAIs());
       }
 
-      if (req.method === "POST" && url.pathname === "/api/features/run") {
+      if (req.method === "POST" && routePath === "/api/features/run") {
         return json(res, 200, await runFeatureDefinition(await body(req)));
       }
 
-      if (req.method === "POST" && url.pathname === "/api/features/merge") {
+      if (req.method === "POST" && routePath === "/api/features/merge") {
         return json(res, 200, mergeFeatureDefinition(await body(req)));
       }
 
-      if (req.method === "GET" && url.pathname === "/api/workflow-design/ais") {
+      if (req.method === "GET" && routePath === "/api/workflow-design/ais") {
         return json(res, 200, listWorkflowAIs());
       }
 
-      if (req.method === "POST" && url.pathname === "/api/workflow-design/run") {
+      if (req.method === "POST" && routePath === "/api/workflow-design/run") {
         return json(res, 200, await runWorkflowDesign(await body(req)));
       }
 
-      if (req.method === "POST" && url.pathname === "/api/workflow-design/merge") {
+      if (req.method === "POST" && routePath === "/api/workflow-design/merge") {
         return json(res, 200, mergeWorkflowDesign(await body(req)));
       }
 
-      if (req.method === "GET" && url.pathname === "/api/uiux-design/ais") {
+      if (req.method === "GET" && routePath === "/api/uiux-design/ais") {
         return json(res, 200, listUIUXAIs());
       }
 
-      if (req.method === "POST" && url.pathname === "/api/uiux-design/run") {
+      if (req.method === "POST" && routePath === "/api/uiux-design/run") {
         return json(res, 200, await runUIUXDesign(await body(req)));
       }
 
-      if (req.method === "POST" && url.pathname === "/api/uiux-design/merge") {
+      if (req.method === "POST" && routePath === "/api/uiux-design/merge") {
         return json(res, 200, mergeUIUXDesign(await body(req)));
       }
 
-      if (req.method === "GET" && url.pathname === "/api/code-generation/ais") {
+      if (req.method === "GET" && routePath === "/api/code-generation/ais") {
         return json(res, 200, listCodeGenerationAIs());
       }
 
-      if (req.method === "POST" && url.pathname === "/api/code-generation/index-page") {
+      if (req.method === "POST" && routePath === "/api/code-generation/index-page") {
         return json(res, 200, await runIndexPageGeneration(await body(req)));
       }
 
-      if (req.method === "GET" && url.pathname === "/api/media-generation/ais") {
+      if (req.method === "GET" && routePath === "/api/media-generation/ais") {
         return json(res, 200, listMediaGenerationAIs());
       }
 
-      if (req.method === "POST" && url.pathname === "/api/media-generation/run") {
+      if (req.method === "POST" && routePath === "/api/media-generation/run") {
         return json(res, 200, await runMediaGeneration(await body(req)));
       }
 
-      const mediaTaskMatch = url.pathname.match(/^\/api\/media-generation\/tasks\/([^/]+)$/);
+      const mediaTaskMatch = routePath.match(/^\/api\/media-generation\/tasks\/([^/]+)$/);
       if (req.method === "GET" && mediaTaskMatch) {
         return json(res, 200, await getMediaTask(mediaTaskMatch[1]));
       }
 
-      if (req.method === "GET" && url.pathname === "/api/business-analysis/ais") {
+      if (req.method === "GET" && routePath === "/api/business-analysis/ais") {
         return json(res, 200, listBusinessAnalysisAIs());
       }
 
-      if (req.method === "POST" && url.pathname === "/api/business-analysis/run") {
+      if (req.method === "POST" && routePath === "/api/business-analysis/run") {
         return json(res, 200, await runBusinessAnalysis(await body(req)));
       }
 
-      if (req.method === "POST" && url.pathname === "/api/business-analysis/merge") {
+      if (req.method === "POST" && routePath === "/api/business-analysis/merge") {
         return json(res, 200, mergeBusinessAnalysis(await body(req)));
       }
 
-      if (req.method === "GET" && url.pathname === "/api/presentation-generation/ais") {
+      if (req.method === "GET" && routePath === "/api/presentation-generation/ais") {
         return json(res, 200, listPresentationAIs());
       }
 
-      if (req.method === "POST" && url.pathname === "/api/presentation-generation/run") {
+      if (req.method === "POST" && routePath === "/api/presentation-generation/run") {
         return json(res, 200, await runPresentationGeneration(await body(req)));
       }
 
-      if (req.method === "GET" && url.pathname === "/api/presentation-generation/files") {
+      if (req.method === "GET" && routePath === "/api/presentation-generation/files") {
         return json(res, 200, presentationFiles);
       }
 
-      if (req.method === "GET" && url.pathname.startsWith("/deliverables/")) {
-        return serveDeliverable(res, url.pathname);
+      if (req.method === "GET" && routePath.startsWith("/deliverables/")) {
+        return serveDeliverable(res, routePath);
       }
 
-      if (req.method === "POST" && url.pathname === "/api/runs") {
+      if (req.method === "POST" && routePath === "/api/runs") {
         const run = createRun(await body(req));
         runs.set(run.id, run);
         return json(res, 201, run);
       }
 
-      const match = url.pathname.match(/^\/api\/runs\/([^/]+)(?:\/([^/]+))?$/);
+      const match = routePath.match(/^\/api\/runs\/([^/]+)(?:\/([^/]+))?$/);
       if (match) {
         const [, id, action] = match;
         const run = runs.get(id);
@@ -194,7 +195,7 @@ export function createApp() {
       }
 
       if (req.method === "GET") {
-        return serveClient(res, url.pathname);
+        return serveClient(res, routePath);
       }
 
       return json(res, 404, { error: "Not found" });
@@ -224,6 +225,20 @@ async function serveDeliverable(res, pathname) {
   } catch {
     return text(res, 404, "Not found");
   }
+}
+
+function normalizeRoutePath(pathname) {
+  for (const marker of ["/api/", "/deliverables/"]) {
+    const markerIndex = pathname.indexOf(marker);
+    if (markerIndex >= 0) return pathname.slice(markerIndex);
+  }
+
+  const trimmedPath = pathname.replace(/\/+$/, "");
+  const fileName = trimmedPath.split("/").pop();
+  if (["app.js", "styles.css", "index.html"].includes(fileName)) return `/${fileName}`;
+  if (!fileName.includes(".")) return "/";
+  if (pathname === "/" || pathname.endsWith("/")) return "/";
+  return pathname;
 }
 
 async function serveClient(res, pathname) {

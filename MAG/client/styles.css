@@ -77,28 +77,27 @@ button:disabled {
   display: flex;
   flex-direction: column;
   border-right: 1px solid var(--line);
-  padding: 22px 14px;
+  padding: 16px 12px;
   background: #fff;
 }
 
 .workflow-sidebar-title {
-  padding: 0 8px 12px;
+  padding: 0 6px 8px;
   color: var(--ink);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 900;
 }
 
 .workflow-sidebar-helper {
-  margin: 0 8px 14px;
+  margin: 0 6px 9px;
   color: var(--muted);
-  font-size: 12px;
-  line-height: 1.45;
+  font-size: 11px;
+  line-height: 1.35;
 }
 
 .workflow-steps {
   display: grid;
-  flex: 1 0 auto;
-  gap: 5px;
+  gap: 3px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -154,21 +153,21 @@ button:disabled {
 
 .workflow-step {
   display: grid;
-  grid-template-columns: 24px minmax(0, 1fr) auto;
-  gap: 8px;
+  grid-template-columns: 20px minmax(0, 1fr) auto;
+  gap: 6px;
   align-items: center;
-  min-height: 42px;
+  min-height: 24px;
   border-radius: 6px;
-  padding: 7px 8px;
+  padding: 4px 6px;
   color: #586779;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 700;
-  line-height: 1.35;
+  line-height: 1.2;
 }
 
 .workflow-skip-checkbox {
-  width: 16px;
-  height: 16px;
+  width: 13px;
+  height: 13px;
   accent-color: var(--blue);
 }
 
@@ -179,12 +178,12 @@ button:disabled {
 .workflow-step-number {
   display: grid;
   place-items: center;
-  width: 22px;
-  height: 22px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
   background: #edf1f6;
   color: #637185;
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 900;
 }
 
@@ -196,6 +195,26 @@ button:disabled {
 .workflow-step.active .workflow-step-number {
   background: rgba(255, 255, 255, 0.22);
   color: #fff;
+}
+
+.workflow-elapsed {
+  display: grid;
+  gap: 3px;
+  margin: 10px 6px 0;
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+}
+
+.workflow-elapsed span {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.workflow-elapsed strong {
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 900;
 }
 
 .intro {
@@ -1424,6 +1443,11 @@ textarea:focus {
 
   .workflow-step {
     width: 162px;
+  }
+
+  .workflow-elapsed {
+    width: 220px;
+    margin: 10px 0 0;
   }
 
   .output-grid {
