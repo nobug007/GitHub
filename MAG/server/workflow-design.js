@@ -1,16 +1,22 @@
-const availableAIs = [
-  { id: "openai-gpt-5-4", provider: "OpenAI", model: "gpt-5.4", name: "OpenAI GPT-5.4", fit: 98, description: "복합 기능을 사용자 흐름, 시스템 처리, 데이터 이동으로 나누어 일관된 WorkFlow를 설계합니다." },
-  { id: "google-gemini-3-pro", provider: "Google", model: "gemini-3-pro-preview", name: "Gemini 3 Pro Preview", fit: 96, description: "여러 단계와 분기 조건을 폭넓게 비교해 서비스 흐름과 예외 경로를 보완합니다." },
-  { id: "anthropic-claude-opus-4-1", provider: "Anthropic", model: "claude-opus-4-1-20250805", name: "Claude Opus 4.1", fit: 95, description: "사용자 관점의 자연스러운 이동 흐름과 단계별 의사결정을 세밀하게 정리합니다." },
-  { id: "mistral-medium-3-5", provider: "Mistral AI", model: "mistral-medium-3-5", name: "Mistral Medium 3.5", fit: 92, description: "핵심 기능을 빠르게 연결하고 초기 MVP에 필요한 최소 흐름을 명확히 제안합니다." },
-  { id: "cohere-command-a-plus", provider: "Cohere", model: "command-a-plus-05-2026", name: "Cohere Command A+", fit: 89, description: "업무 절차와 결과 전달 과정을 구조화하여 운영 관점의 WorkFlow를 보완합니다." }
-];
+import { generateText } from "./providers/text.js";
+import { createTextAIList, withTextConnections } from "./providers/catalog.js";
+
+const availableAIs = createTextAIList({
+  descriptions: [
+    "복합 기능을 사용자 흐름, 시스템 처리, 데이터 이동으로 나누어 WorkFlow를 설계합니다.",
+    "여러 단계와 분기 조건을 비교해 서비스 흐름과 예외 경로를 보완합니다.",
+    "빠른 응답으로 핵심 기능을 연결하고 최소 흐름을 제안합니다.",
+    "연결 가능한 모델을 자동 선택하여 운영 관점의 흐름을 보완합니다.",
+    "빠른 추론으로 사용자와 관리자 WorkFlow를 정리합니다."
+  ],
+  fallbackIds: ["openai-gpt-5-4", "google-gemini-3-pro", "google-gemini-3-pro", "cohere-command-a-plus", "mistral-medium-3-5"]
+});
 
 export function listWorkflowAIs() {
-  return availableAIs;
+  return withTextConnections(availableAIs);
 }
 
-export async function runWorkflowDesign({ idea, featureDefinition, selectedAIIds }) {
+export async function runWorkflowDesign({ idea, featureDefinition, selectedAIIds, useLiveAI = false }) {
   const selected = selectedAIIds.map((id) => availableAIs.find((ai) => ai.id === id)).filter(Boolean);
   if (!idea?.trim()) throw new Error("아이디어를 입력해 주세요.");
   if (!featureDefinition?.trim()) throw new Error("편집된 핵심 기능 정의가 필요합니다.");
@@ -23,13 +29,16 @@ export async function runWorkflowDesign({ idea, featureDefinition, selectedAIIds
     prompt,
     outputs: await Promise.all(selected.map(async (ai, index) => {
       await sleep(80 + index * 50);
+      const generated = await generateText({ provider: ai.provider, model: ai.model, prompt, fallback: outputFor(ai.fallbackId, idea, featureDefinition), useLiveAI });
       return {
         aiId: ai.id,
         aiName: ai.name,
         provider: ai.provider,
         model: ai.model,
         fit: ai.fit,
-        content: outputFor(ai.id, idea, featureDefinition)
+        content: generated.content,
+        source: generated.source,
+        actualModel: generated.actualModel
       };
     }))
   };

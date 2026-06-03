@@ -1,16 +1,22 @@
-const availableAIs = [
-  { id: "openai-gpt-5-4", provider: "OpenAI", model: "gpt-5.4", name: "OpenAI GPT-5.4", fit: 98, description: "WorkFlow를 화면 목록, UI 요소, CTA와 이동 경로로 체계적으로 변환합니다." },
-  { id: "google-gemini-3-pro", provider: "Google", model: "gemini-3-pro-preview", name: "Gemini 3 Pro Preview", fit: 96, description: "다양한 화면 상태와 사용자 접점을 폭넓게 비교하여 UI/UX 구성을 보완합니다." },
-  { id: "anthropic-claude-opus-4-1", provider: "Anthropic", model: "claude-opus-4-1-20250805", name: "Claude Opus 4.1", fit: 95, description: "사용자의 맥락과 의사결정 흐름을 고려해 자연스러운 화면 경험을 설계합니다." },
-  { id: "mistral-medium-3-5", provider: "Mistral AI", model: "mistral-medium-3-5", name: "Mistral Medium 3.5", fit: 92, description: "초기 MVP에 필요한 최소 화면과 반복 사용에 적합한 간결한 UI 구조를 제안합니다." },
-  { id: "cohere-command-a-plus", provider: "Cohere", model: "command-a-plus-05-2026", name: "Cohere Command A+", fit: 89, description: "업무 흐름을 기준으로 입력, 검토, 결과 전달 화면을 구조화합니다." }
-];
+import { generateText } from "./providers/text.js";
+import { createTextAIList, withTextConnections } from "./providers/catalog.js";
+
+const availableAIs = createTextAIList({
+  descriptions: [
+    "WorkFlow를 화면 목록, UI 요소, CTA와 이동 경로로 체계적으로 변환합니다.",
+    "화면 상태와 사용자 접점을 비교하여 UI/UX 구성을 보완합니다.",
+    "빠른 응답으로 초기 MVP에 필요한 최소 화면을 제안합니다.",
+    "연결 가능한 모델을 자동 선택하여 화면 구성을 보완합니다.",
+    "빠른 추론으로 입력, 검토, 결과 전달 화면을 구조화합니다."
+  ],
+  fallbackIds: ["openai-gpt-5-4", "google-gemini-3-pro", "google-gemini-3-pro", "cohere-command-a-plus", "mistral-medium-3-5"]
+});
 
 export function listUIUXAIs() {
-  return availableAIs;
+  return withTextConnections(availableAIs);
 }
 
-export async function runUIUXDesign({ idea, workflowDefinition, selectedAIIds }) {
+export async function runUIUXDesign({ idea, workflowDefinition, selectedAIIds, useLiveAI = false }) {
   const selected = selectedAIIds.map((id) => availableAIs.find((ai) => ai.id === id)).filter(Boolean);
   if (!idea?.trim()) throw new Error("아이디어를 입력해 주세요.");
   if (!workflowDefinition?.trim()) throw new Error("편집된 WorkFlow 구성이 필요합니다.");
@@ -23,15 +29,48 @@ export async function runUIUXDesign({ idea, workflowDefinition, selectedAIIds })
     prompt,
     outputs: await Promise.all(selected.map(async (ai, index) => {
       await sleep(80 + index * 50);
+      const preview = outputFor(ai.fallbackId, idea, workflowDefinition);
+      const generated = await generateText({ provider: ai.provider, model: ai.model, prompt, fallback: preview.content, useLiveAI });
+      const visual = generated.source === "live" ? livePreviewFor(ai, generated.content, preview) : preview;
       return {
         aiId: ai.id,
         aiName: ai.name,
         provider: ai.provider,
         model: ai.model,
         fit: ai.fit,
-        ...outputFor(ai.id, idea, workflowDefinition)
+        ...visual,
+        content: generated.content,
+        source: generated.source,
+        actualModel: generated.actualModel
       };
     }))
+  };
+}
+
+function livePreviewFor(ai, content, fallback) {
+  const lines = content.split(/\r?\n/).map((line) => line.replace(/^[-*#\d.)\s]+/, "").trim()).filter(Boolean);
+  const unique = [...new Set(lines)].filter((line) => line.length > 7).slice(0, 16);
+  const style = {
+    OpenAI: "Structured Live",
+    Google: "State-aware Live",
+    OpenRouter: "Adaptive Live",
+    Groq: "Rapid Live"
+  }[ai.provider] || "Live";
+  const titles = unique.slice(0, 4);
+  const screens = fallback.screens.map((screen, index) => ({
+    ...screen,
+    style,
+    title: titles[index] || screen.title,
+    description: unique[index + 4] || screen.description,
+    blocks: unique.slice(8 + index * 2, 12 + index * 2).length
+      ? unique.slice(8 + index * 2, 12 + index * 2)
+      : screen.blocks
+  }));
+  return {
+    ...fallback,
+    style,
+    summary: `${ai.name} 라이브 응답을 반영한 화면 구성입니다. ${unique[0] || fallback.summary}`,
+    screens
   };
 }
 

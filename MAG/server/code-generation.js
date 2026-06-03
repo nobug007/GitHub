@@ -1,16 +1,22 @@
-const availableAIs = [
-  { id: "openai-gpt-5-4", provider: "OpenAI", model: "gpt-5.4", name: "OpenAI GPT-5.4", fit: 98, description: "화면 요구사항을 읽고 접근성과 반응형 구성을 갖춘 Index Page를 안정적으로 작성합니다." },
-  { id: "anthropic-claude-opus-4-1", provider: "Anthropic", model: "claude-opus-4-1-20250805", name: "Claude Opus 4.1", fit: 97, description: "긴 UI/UX 문맥을 유지하면서 읽기 쉬운 구조와 세밀한 인터랙션을 구현합니다." },
-  { id: "google-gemini-3-pro", provider: "Google", model: "gemini-3-pro-preview", name: "Gemini 3 Pro Preview", fit: 95, description: "다양한 화면 상태와 반응형 레이아웃을 고려한 Index Page 초안을 생성합니다." },
-  { id: "mistral-medium-3-5", provider: "Mistral AI", model: "mistral-medium-3-5", name: "Mistral Medium 3.5", fit: 92, description: "초기 MVP 검증에 적합한 간결하고 빠른 Index Page 구현안을 만듭니다." },
-  { id: "cohere-command-a-plus", provider: "Cohere", model: "command-a-plus-05-2026", name: "Cohere Command A+", fit: 89, description: "업무 중심 서비스에 적합한 입력, 상태, 결과 영역을 명확하게 구성합니다." }
-];
+import { generateText } from "./providers/text.js";
+import { createTextAIList, withTextConnections } from "./providers/catalog.js";
+
+const availableAIs = createTextAIList({
+  descriptions: [
+    "화면 요구사항을 읽고 반응형 구성을 갖춘 Index Page 구현안을 작성합니다.",
+    "UI/UX 문맥을 유지하면서 다양한 화면 상태와 레이아웃을 고려합니다.",
+    "빠른 응답으로 간결한 Index Page 구현안을 생성합니다.",
+    "연결 가능한 모델을 자동 선택하여 코드 생성 관점을 보완합니다.",
+    "빠른 추론으로 입력, 상태, 결과 영역을 명확하게 구성합니다."
+  ],
+  fallbackIds: ["openai-gpt-5-4", "google-gemini-3-pro", "google-gemini-3-pro", "cohere-command-a-plus", "mistral-medium-3-5"]
+});
 
 export function listCodeGenerationAIs() {
-  return availableAIs;
+  return withTextConnections(availableAIs);
 }
 
-export async function runIndexPageGeneration({ idea, uiuxDefinition, selectedAIIds }) {
+export async function runIndexPageGeneration({ idea, uiuxDefinition, selectedAIIds, useLiveAI = false }) {
   const selected = selectedAIIds.map((id) => availableAIs.find((ai) => ai.id === id)).filter(Boolean);
   if (!idea?.trim()) throw new Error("아이디어를 입력해 주세요.");
   if (!uiuxDefinition?.trim()) throw new Error("확정된 UI / UX 화면 구성이 필요합니다.");
@@ -23,13 +29,18 @@ export async function runIndexPageGeneration({ idea, uiuxDefinition, selectedAII
     prompt,
     outputs: await Promise.all(selected.map(async (ai, index) => {
       await sleep(80 + index * 50);
+      const preview = indexPageFor(ai.fallbackId, idea);
+      const generated = await generateText({ provider: ai.provider, model: ai.model, prompt, fallback: `로컬 Index Page 프리뷰: ${preview.title}`, useLiveAI });
       return {
         aiId: ai.id,
         aiName: ai.name,
         provider: ai.provider,
         model: ai.model,
         fit: ai.fit,
-        ...indexPageFor(ai.id, idea)
+        ...preview,
+        implementationNotes: generated.content,
+        source: generated.source,
+        actualModel: generated.actualModel
       };
     }))
   };

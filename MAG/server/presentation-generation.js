@@ -1,16 +1,22 @@
-const availableAIs = [
-  { id: "microsoft-copilot-powerpoint", provider: "Microsoft", model: "copilot-powerpoint", name: "Microsoft Copilot for PowerPoint", fit: 98, description: "PowerPoint 문서 흐름과 발표용 슬라이드 구성을 빠르게 작성하는 데 적합합니다." },
-  { id: "canva-magic-design", provider: "Canva", model: "magic-design", name: "Canva Magic Design", fit: 97, description: "밝고 정돈된 시각 스타일과 발표용 레이아웃을 적용한 PPT 초안을 구성합니다." },
-  { id: "gamma-ai", provider: "Gamma", model: "gamma-ai", name: "Gamma AI", fit: 95, description: "긴 사업성 리포트를 읽기 쉬운 스토리라인과 카드형 슬라이드로 변환합니다." },
-  { id: "beautiful-ai", provider: "Beautiful.ai", model: "designer-bot", name: "Beautiful.ai DesignerBot", fit: 93, description: "슬라이드별 정보 밀도와 시각적 균형을 자동으로 정리합니다." },
-  { id: "pitch-ai", provider: "Pitch", model: "pitch-ai", name: "Pitch AI", fit: 90, description: "협업과 발표에 적합한 간결한 사업 제안서 구조를 만듭니다." }
-];
+import { generateText } from "./providers/text.js";
+import { createTextAIList, withTextConnections } from "./providers/catalog.js";
+
+const availableAIs = createTextAIList({
+  descriptions: [
+    "사업성 리포트를 발표용 슬라이드 구조와 핵심 메시지로 변환합니다.",
+    "긴 사업 분석을 읽기 쉬운 스토리라인과 슬라이드 흐름으로 정리합니다.",
+    "빠른 응답으로 제안서 목차와 발표 메시지를 구성합니다.",
+    "연결 가능한 모델을 자동 선택하여 제안서 초안을 보완합니다.",
+    "빠른 추론으로 간결한 사업 제안서 구조를 만듭니다."
+  ],
+  fallbackIds: ["microsoft-copilot-powerpoint", "canva-magic-design", "gamma-ai", "beautiful-ai", "pitch-ai"]
+});
 
 export function listPresentationAIs() {
-  return availableAIs;
+  return withTextConnections(availableAIs);
 }
 
-export async function runPresentationGeneration({ idea, businessReport, selectedAIIds }) {
+export async function runPresentationGeneration({ idea, businessReport, selectedAIIds, useLiveAI = false }) {
   const selected = selectedAIIds.map((id) => availableAIs.find((ai) => ai.id === id)).filter(Boolean);
   if (!idea?.trim()) throw new Error("아이디어를 입력해 주세요.");
   if (!businessReport?.trim()) throw new Error("편집된 최종 사업성 리포트가 필요합니다.");
@@ -23,13 +29,16 @@ export async function runPresentationGeneration({ idea, businessReport, selected
     prompt,
     outputs: await Promise.all(selected.map(async (ai, index) => {
       await sleep(80 + index * 50);
+      const generated = await generateText({ provider: ai.provider, model: ai.model, prompt, fallback: outputFor(ai.fallbackId, idea, businessReport), useLiveAI });
       return {
         aiId: ai.id,
         aiName: ai.name,
         provider: ai.provider,
         model: ai.model,
         fit: ai.fit,
-        content: outputFor(ai.id, idea, businessReport)
+        content: generated.content,
+        source: generated.source,
+        actualModel: generated.actualModel
       };
     }))
   };

@@ -10,8 +10,8 @@ test("persona analysis exposes five ranked AIs", () => {
   const ais = listPersonaAIs();
   assert.equal(ais.length, 5);
   assert.ok(ais[0].fit > ais[4].fit);
-  assert.equal(ais[0].name, "OpenAI GPT-5.4");
-  assert.ok(ais.every((ai) => ai.provider && ai.model));
+  assert.equal(ais[0].name, "OpenAI GPT-5.2");
+  assert.ok(ais.every((ai) => ai.provider && ai.model && ai.connection));
 });
 
 test("selected persona AIs return three outputs and merge", async () => {

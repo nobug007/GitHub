@@ -18,9 +18,10 @@ import { listFeatureAIs, mergeFeatureDefinition, runFeatureDefinition } from "./
 import { listWorkflowAIs, mergeWorkflowDesign, runWorkflowDesign } from "./workflow-design.js";
 import { listUIUXAIs, mergeUIUXDesign, runUIUXDesign } from "./uiux-design.js";
 import { listCodeGenerationAIs, runIndexPageGeneration } from "./code-generation.js";
-import { listMediaGenerationAIs, runMediaGeneration } from "./media-generation.js";
+import { getMediaTask, listMediaGenerationAIs, runMediaGeneration } from "./media-generation.js";
 import { listBusinessAnalysisAIs, mergeBusinessAnalysis, runBusinessAnalysis } from "./business-analysis.js";
 import { listPresentationAIs, runPresentationGeneration } from "./presentation-generation.js";
+import { providerStatus } from "./providers/text.js";
 import { providers, stages } from "./workflow.js";
 
 const serverDir = fileURLToPath(new URL(".", import.meta.url));
@@ -31,6 +32,10 @@ const presentationFiles = [
   { name: "MAG Canva Proposal", file: "MAG-Canva-Proposal.pptx", description: "밝은 비주얼 중심 PPT" },
   { name: "MAG Gamma Proposal", file: "MAG-Gamma-Proposal.pptx", description: "스토리텔링 중심 PPT" }
 ];
+const mediaFiles = [
+  { name: "MAG Future MVP Demo", file: "MAG-Future-MVP-Demo.mp4", description: "최종 선택 영상 기반 10초 MVP 작동 데모" }
+];
+const deliverableFiles = [...presentationFiles, ...mediaFiles];
 
 export function createApp() {
   const runs = new Map();
@@ -41,6 +46,10 @@ export function createApp() {
 
       if (req.method === "GET" && url.pathname === "/api/health") {
         return json(res, 200, { ok: true, providers: providers.length, stages: stages.length });
+      }
+
+      if (req.method === "GET" && url.pathname === "/api/providers/status") {
+        return json(res, 200, providerStatus());
       }
 
       if (req.method === "GET" && url.pathname === "/api/workflow") {
@@ -135,6 +144,11 @@ export function createApp() {
         return json(res, 200, await runMediaGeneration(await body(req)));
       }
 
+      const mediaTaskMatch = url.pathname.match(/^\/api\/media-generation\/tasks\/([^/]+)$/);
+      if (req.method === "GET" && mediaTaskMatch) {
+        return json(res, 200, await getMediaTask(mediaTaskMatch[1]));
+      }
+
       if (req.method === "GET" && url.pathname === "/api/business-analysis/ais") {
         return json(res, 200, listBusinessAnalysisAIs());
       }
@@ -192,14 +206,16 @@ export function createApp() {
 
 async function serveDeliverable(res, pathname) {
   const relativePath = decodeURIComponent(pathname.replace(/^\/deliverables\/+/, ""));
-  if (!presentationFiles.some((item) => item.file === relativePath)) return text(res, 404, "Not found");
+  if (!deliverableFiles.some((item) => item.file === relativePath)) return text(res, 404, "Not found");
   const filePath = normalize(join(deliverablesDir, relativePath));
   if (!filePath.startsWith(deliverablesDir)) return text(res, 403, "Forbidden");
 
   try {
     const content = await readFile(filePath);
     res.writeHead(200, {
-      "content-type": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "content-type": extname(relativePath).toLowerCase() === ".mp4"
+        ? "video/mp4"
+        : "application/vnd.openxmlformats-officedocument.presentationml.presentation",
       "content-disposition": `attachment; filename="${relativePath}"`,
       "content-length": content.byteLength,
       "cache-control": "no-store"

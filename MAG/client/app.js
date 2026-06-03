@@ -2,6 +2,9 @@ const app = document.querySelector("#app");
 
 const state = {
   page: 1,
+  plan: "premium",
+  premiumSkipSteps: [],
+  useLiveAI: false,
   idea: "",
   aiList: [],
   selectedAIIds: [],
@@ -108,31 +111,57 @@ function render() {
 }
 
 function renderIdeaPage() {
+  const isPremium = state.plan === "premium";
   app.innerHTML = `
     <section class="page intro">
       <h1>당신의 아이디어를 구체화 해 드립니다.</h1>
-      <p>아이디어를 입력하고 문제 정의와 목표 구체화에 적합한 AI 3개를 선택해 주세요.</p>
+      <p>진행 방식을 선택하고 아이디어를 입력해 주세요. 필요한 검토 수준에 맞춰 AI 제작 흐름을 구성합니다.</p>
+      ${renderPlanSelector()}
       <div class="idea-box">
         <label for="ideaInput">아이디어를 입력해 주세요.</label>
         <textarea class="idea-input" id="ideaInput" placeholder="예: 지역 소상공인과 관광객을 연결하는 AI 큐레이션 서비스를 만들고 싶습니다.">${escapeHtml(state.idea)}</textarea>
       </div>
-      ${renderAISelection({
+      ${isPremium ? renderAISelection({
         title: "문제정의 및 목표 구체화 AI",
         list: state.aiList,
         selectedIds: state.selectedAIIds,
         attribute: "data-problem-ai-id",
         helper: "문제 정의 및 목표 구체화 적합도가 높은 순서입니다. 실행할 AI 서버를 3개 선택해 주세요."
-      })}
+      }) : `<div class="plan-note">${state.plan === "free" ? "FREE는 입력 후 10단계를 자동으로 진행하여 제안서 다운로드 화면까지 이동합니다." : "STANDARD는 2~4단계, 5~6단계, 7~8단계, 9~10단계를 묶어서 진행합니다. 각 묶음의 마지막 화면에서 결과를 검토할 수 있습니다."}</div>`}
       <div id="errorBox"></div>
-      <div class="action-row"><button class="primary large" id="executeButton" type="button">실행</button></div>
+      <div class="action-row"><button class="primary large" id="executeButton" type="button">${isPremium ? "실행" : "자동 제작 시작"}</button></div>
     </section>
   `;
   mountSidebar(1);
   document.querySelector("#ideaInput").addEventListener("input", (event) => {
     state.idea = event.target.value;
   });
-  bindAIButtons("[data-problem-ai-id]", "problem");
+  document.querySelectorAll("[data-plan]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.plan = button.dataset.plan;
+      render();
+    });
+  });
+  if (isPremium) bindAIButtons("[data-problem-ai-id]", "problem");
   document.querySelector("#executeButton").addEventListener("click", executeSelectedAIs);
+}
+
+function renderPlanSelector() {
+  const plans = [
+    ["free", "FREE", "아이디어 입력 후 결과물까지 자동 완주"],
+    ["standard", "STANDARD", "묶음별 핵심 결과만 검토하고 수정"],
+    ["premium", "PREMIUM", "AI 선택과 수정 단계를 세밀하게 제어"]
+  ];
+  return `
+    <section class="plan-selector" aria-label="제작 플랜 선택">
+      ${plans.map(([id, name, description]) => `
+        <button class="plan-card ${state.plan === id ? "selected" : ""}" data-plan="${id}" type="button">
+          <strong>${name}</strong>
+          <span>${description}</span>
+        </button>
+      `).join("")}
+    </section>
+  `;
 }
 
 function renderProblemOutputPage() {
@@ -339,6 +368,7 @@ function renderFeatureOutputPage() {
 }
 
 function renderFeatureMergedPage() {
+  const isStandard = state.plan === "standard";
   app.innerHTML = `
     <section class="page">
       ${renderHeading("핵심 기능 정의 취합 완료", "Merge 서버가 세 AI의 핵심 기능 정의를 하나로 취합했습니다. 내용을 수정한 뒤 WorkFlow 설계에 사용할 AI 서버 3개를 선택해 주세요.")}
@@ -348,7 +378,7 @@ function renderFeatureMergedPage() {
         <p class="helper">이 내용은 선택한 WorkFlow 설계 AI 서버에 전달됩니다. 필요한 부분을 직접 편집할 수 있습니다.</p>
         <textarea id="featureMergedInput">${escapeHtml(state.featureMerged)}</textarea>
       </section>
-      ${renderAISelection({
+      ${isStandard ? `<div class="plan-note">STANDARD 체크포인트: 핵심 기능을 수정한 뒤 5~6단계 WorkFlow와 UI / UX 구성을 한 번에 진행합니다.</div>` : renderAISelection({
         title: "WorkFlow 설계 AI 서버",
         list: state.workflowAIList,
         selectedIds: state.workflowSelectedAIIds,
@@ -358,7 +388,7 @@ function renderFeatureMergedPage() {
       <div id="errorBox"></div>
       <div class="action-row">
         <button class="secondary" id="backToFeatureOutputsButton" type="button">이전 단계로 돌아가기</button>
-        <button class="primary large" id="workflowRunButton" type="button">Submit</button>
+        <button class="primary large" id="${isStandard ? "standardUIUXButton" : "workflowRunButton"}" type="button">${isStandard ? "5~6단계 자동 실행" : "Submit"}</button>
       </div>
     </section>
   `;
@@ -366,13 +396,16 @@ function renderFeatureMergedPage() {
   document.querySelector("#featureMergedInput").addEventListener("input", (event) => {
     state.featureMerged = event.target.value;
   });
-  bindAIButtons("[data-workflow-ai-id]", "workflow");
+  if (!isStandard) bindAIButtons("[data-workflow-ai-id]", "workflow");
   document.querySelector("#backToFeatureOutputsButton").addEventListener("click", () => {
     state.featureMerged = document.querySelector("#featureMergedInput").value;
     state.page = 8;
     render();
   });
-  document.querySelector("#workflowRunButton").addEventListener("click", executeWorkflowAIs);
+  document.querySelector(isStandard ? "#standardUIUXButton" : "#workflowRunButton").addEventListener("click", isStandard ? () => {
+    state.featureMerged = document.querySelector("#featureMergedInput").value;
+    runAutomation("standardUIUXButton", "uiux", 5);
+  } : executeWorkflowAIs);
 }
 
 function renderWorkflowOutputPage() {
@@ -490,8 +523,14 @@ function renderUIUXOutputPage() {
   });
   document.querySelector("#confirmUIUXButton").addEventListener("click", () => {
     state.uiuxMerged = document.querySelector("#uiuxMergedInput").value;
-    state.page = 14;
-    render();
+    if (state.plan === "standard") {
+      runAutomation("confirmUIUXButton", "media", 7);
+    } else if (state.plan === "premium" && consecutivePremiumAutoTarget(7)) {
+      runAutomation("confirmUIUXButton", consecutivePremiumAutoTarget(7), 7);
+    } else {
+      state.page = 14;
+      render();
+    }
   });
 }
 
@@ -649,6 +688,7 @@ function renderFinalIndexPage() {
 }
 
 function renderMediaGalleryPage() {
+  const isStandard = state.plan === "standard";
   app.innerHTML = `
     <section class="page">
       ${renderHeading("미래 완성형 MVP 영상 제작 완료", "선택한 AI 엔진이 완성된 서비스의 작동 모습을 상상하여 데모 영상 3개를 구성했습니다. 썸네일을 눌러 약 10초 프리뷰를 확인해 주세요.")}
@@ -664,13 +704,16 @@ function renderMediaGalleryPage() {
             <div class="media-card-body">
               <h2>${escapeHtml(output.aiName)}</h2>
               <p>${escapeHtml(output.summary)}</p>
+              ${output.taskId ? `<div class="media-live-status"><b>${escapeHtml(output.taskStatus || "PENDING")}</b><span>실제 AI 영상 작업</span></div>` : `<div class="media-live-status preview"><b>PREVIEW</b><span>로컬 모션 프리뷰</span></div>`}
+              ${output.taskId && !output.videoUrl ? `<button class="preview-link" type="button" data-media-refresh-index="${index}">생성 상태 확인 →</button>` : ""}
+              ${output.videoUrl ? `<a class="download-link" href="${escapeHtml(output.videoUrl)}" target="_blank" rel="noreferrer">실제 영상 다운로드</a>` : ""}
               <span class="fit">적합도 ${output.fit}%</span>
               <button class="index-select-button ${state.finalMediaIndex === index ? "selected" : ""}" type="button" data-final-media-index="${index}">${state.finalMediaIndex === index ? "최종 영상 선택됨" : "최종 영상 선택"}</button>
             </div>
           </article>
         `).join("")}
       </div>
-      ${renderAISelection({
+      ${isStandard ? `<div class="plan-note">STANDARD 체크포인트: 최종 영상을 선택한 뒤 9~10단계 사업성 분석과 제안서 초안을 한 번에 생성합니다.</div>` : renderAISelection({
         title: "사업성 분석 AI 서버",
         list: state.businessAIList,
         selectedIds: state.businessSelectedAIIds,
@@ -680,7 +723,7 @@ function renderMediaGalleryPage() {
       <div id="errorBox"></div>
       <div class="action-row">
         <button class="secondary" id="backToFinalIndexButton" type="button">이전 단계로 돌아가기</button>
-        <button class="primary large" id="businessRunButton" type="button">Submit</button>
+        <button class="primary large" id="${isStandard ? "standardFilesButton" : "businessRunButton"}" type="button">${isStandard ? "9~10단계 자동 실행" : "Submit"}</button>
       </div>
     </section>
   `;
@@ -698,12 +741,15 @@ function renderMediaGalleryPage() {
       render();
     });
   });
-  bindAIButtons("[data-business-ai-id]", "business");
+  document.querySelectorAll("[data-media-refresh-index]").forEach((button) => {
+    button.addEventListener("click", () => refreshMediaTask(Number(button.dataset.mediaRefreshIndex)));
+  });
+  if (!isStandard) bindAIButtons("[data-business-ai-id]", "business");
   document.querySelector("#backToFinalIndexButton").addEventListener("click", () => {
     state.page = 17;
     render();
   });
-  document.querySelector("#businessRunButton").addEventListener("click", executeBusinessAIs);
+  document.querySelector(isStandard ? "#standardFilesButton" : "#businessRunButton").addEventListener("click", isStandard ? () => runAutomation("standardFilesButton", "files", 9) : executeBusinessAIs);
 }
 
 function renderBusinessOutputPage() {
@@ -790,9 +836,12 @@ function renderPresentationOutputPage() {
 }
 
 function renderPresentationFilesPage() {
+  const selectedVideo = state.mediaOutputs[state.finalMediaIndex];
+  const selectedVideoUrl = selectedVideo?.videoUrl || "/deliverables/MAG-Future-MVP-Demo.mp4";
+  const selectedVideoTarget = selectedVideo?.videoUrl ? ` target="_blank" rel="noreferrer"` : "";
   app.innerHTML = `
     <section class="page">
-      ${renderHeading("제안서 초안 생성 완료", "앞서 진행한 모든 단계가 반영된 PPTX 제안서 3종을 내려받을 수 있습니다.")}
+      ${renderHeading("제안서 초안 생성 완료", "앞서 진행한 모든 단계가 반영된 PPTX 제안서 3종과 최종 MVP 데모 영상을 내려받을 수 있습니다.")}
       <section class="delivery-panel">
         <div class="result-badge">PPTX Deliverables</div>
         <h2>최종 제안서 다운로드</h2>
@@ -809,6 +858,20 @@ function renderPresentationFilesPage() {
           `).join("")}
         </div>
       </section>
+      <section class="delivery-panel">
+        <div class="result-badge">MP4 Deliverable</div>
+        <h2>최종 영상 다운로드</h2>
+        <p class="helper">${selectedVideo ? `${escapeHtml(selectedVideo.aiName)} 기반으로 구성한 미래 완성형 MVP 작동 영상입니다.` : "미래 완성형 MVP 작동 영상입니다."}</p>
+        <div class="delivery-list">
+          <article class="delivery-item">
+            <div>
+              <h3>MAG Future MVP Demo</h3>
+              <p>최종 선택 영상 기반 10초 MVP 작동 데모 · MP4</p>
+            </div>
+            <a class="download-link" href="${escapeHtml(selectedVideoUrl)}"${selectedVideoTarget}>영상 다운로드</a>
+          </article>
+        </div>
+      </section>
       <div class="action-row"><button class="secondary" id="backToPresentationDraftsButton" type="button">이전 단계로 돌아가기</button></div>
     </section>
   `;
@@ -823,8 +886,8 @@ function renderMediaPreviewPage() {
   const output = state.mediaOutputs[state.mediaPreviewIndex];
   app.innerHTML = `
     <section class="page media-preview-page">
-      ${renderHeading(`${output.aiName} 미래 MVP 데모`, "모든 기능이 완성되었을 때의 작동 모습을 약 10초 모션 프리뷰로 표현했습니다.")}
-      <section class="demo-video theme-${state.mediaPreviewIndex}">
+      ${renderHeading(`${output.aiName} 미래 MVP 데모`, output.videoUrl ? "실제 AI가 생성한 영상을 재생합니다." : "모든 기능이 완성되었을 때의 작동 모습을 약 10초 모션 프리뷰로 표현했습니다.")}
+      ${output.videoUrl ? `<video class="generated-video" src="${escapeHtml(output.videoUrl)}" controls autoplay playsinline></video>` : `<section class="demo-video theme-${state.mediaPreviewIndex}">
         <div class="demo-video-top">
           <span>MAG FUTURE PRODUCT FILM</span>
           <b>00:10</b>
@@ -853,10 +916,10 @@ function renderMediaPreviewPage() {
           </div>
         </div>
         <div class="demo-progress"><span></span></div>
-      </section>
+      </section>`}
       <div class="action-row">
         <button class="secondary" id="backToMediaGalleryButton" type="button">영상 목록으로 돌아가기</button>
-        <button class="primary" id="replayMediaButton" type="button">다시 재생</button>
+        ${output.videoUrl ? `<a class="download-link" href="${escapeHtml(output.videoUrl)}" target="_blank" rel="noreferrer">실제 영상 다운로드</a>` : `<button class="primary" id="replayMediaButton" type="button">다시 재생</button>`}
       </div>
     </section>
   `;
@@ -865,13 +928,27 @@ function renderMediaPreviewPage() {
     state.page = 18;
     render();
   });
-  document.querySelector("#replayMediaButton").addEventListener("click", () => {
-    const video = document.querySelector(".demo-video");
-    video.classList.remove("playing");
-    void video.offsetWidth;
-    video.classList.add("playing");
-  });
-  document.querySelector(".demo-video").classList.add("playing");
+  const replayButton = document.querySelector("#replayMediaButton");
+  if (replayButton) {
+    replayButton.addEventListener("click", () => {
+      const video = document.querySelector(".demo-video");
+      video.classList.remove("playing");
+      void video.offsetWidth;
+      video.classList.add("playing");
+    });
+    document.querySelector(".demo-video").classList.add("playing");
+  }
+}
+
+async function refreshMediaTask(index) {
+  const output = state.mediaOutputs[index];
+  if (!output?.taskId) return;
+  const response = await fetch(`/api/media-generation/tasks/${encodeURIComponent(output.taskId)}`);
+  const task = await response.json();
+  if (!response.ok) return showError(task.error || "영상 상태를 확인하지 못했습니다.");
+  output.taskStatus = task.status || "UNKNOWN";
+  output.videoUrl = task.output?.[0] || "";
+  render();
 }
 
 function renderCompactIndexPreview(output) {
@@ -967,16 +1044,37 @@ function mountSidebar(activeStep) {
   sidebar.className = "workflow-sidebar";
   sidebar.innerHTML = `
     <div class="workflow-sidebar-title">MVP 제작 단계</div>
+    ${state.plan === "premium" ? `<p class="workflow-sidebar-helper">체크한 단계는 자동 진행합니다.</p>` : `<p class="workflow-sidebar-helper">${state.plan.toUpperCase()} 진행 모드</p>`}
     <ol class="workflow-steps">
       ${steps.map((label, index) => `
         <li class="workflow-step ${index + 1 === activeStep ? "active" : ""}">
           <span class="workflow-step-number">${index + 1}</span>
           <span>${escapeHtml(label)}</span>
+          ${state.plan === "premium" ? `<input class="workflow-skip-checkbox" type="checkbox" data-premium-skip-step="${index + 1}" aria-label="${index + 1}단계 자동 진행" ${state.premiumSkipSteps.includes(index + 1) ? "checked" : ""}>` : ""}
         </li>
       `).join("")}
     </ol>
+    <button class="ai-connection-toggle ${state.useLiveAI ? "live" : ""}" id="aiConnectionToggle" type="button" aria-pressed="${state.useLiveAI}">
+      <span class="ai-connection-dot"></span>
+      <span>
+        <strong>${state.useLiveAI ? "실제 AI 연결 ON" : "가상 AI 연결 OFF"}</strong>
+        <small>${state.useLiveAI ? "외부 API를 호출합니다." : "테스트 응답을 사용합니다."}</small>
+      </span>
+    </button>
   `;
   app.prepend(sidebar);
+  document.querySelector("#aiConnectionToggle").addEventListener("click", () => {
+    state.useLiveAI = !state.useLiveAI;
+    render();
+  });
+  sidebar.querySelectorAll("[data-premium-skip-step]").forEach((checkbox) => {
+    checkbox.addEventListener("change", () => {
+      const step = Number(checkbox.dataset.premiumSkipStep);
+      state.premiumSkipSteps = checkbox.checked
+        ? [...new Set([...state.premiumSkipSteps, step])].sort((a, b) => a - b)
+        : state.premiumSkipSteps.filter((value) => value !== step);
+    });
+  });
 }
 
 function renderHeading(title, description) {
@@ -1004,12 +1102,16 @@ function renderAISelection({ title, list, selectedIds, attribute, helper }) {
 
 function aiCard(ai, index, selectedIds, attribute) {
   const selected = selectedIds.includes(ai.id);
+  const connectionLabel = ai.connection
+    ? ai.connection.configured ? "API 키 설정됨" : "API 키 필요"
+    : "";
   return `
     <article class="ai-card ${selected ? "selected" : ""}">
       <span class="rank">${index + 1}</span>
       <div>
         <h3>${escapeHtml(ai.name)}</h3>
         <p>${escapeHtml(ai.description)}</p>
+        ${ai.provider || ai.model ? `<div class="ai-meta">${ai.provider ? `<span>${escapeHtml(ai.provider)}</span>` : ""}${ai.model ? `<code>${escapeHtml(ai.model)}</code>` : ""}${connectionLabel ? `<b class="${ai.connection.configured ? "connected" : "needs-key"}">${connectionLabel}</b>` : ""}</div>` : ""}
         <span class="fit">적합도 ${ai.fit}%</span>
       </div>
       <button class="select-button" type="button" ${attribute}="${ai.id}">${selected ? "선택됨" : "선택"}</button>
@@ -1070,17 +1172,165 @@ function bindOutputEditors(selector, outputs) {
 
 async function executeSelectedAIs() {
   if (!state.idea.trim()) return showError("아이디어를 입력해 주세요.");
+  if (state.plan === "free") return runAutomation("executeButton", "files", 1);
+  if (state.plan === "standard") return runAutomation("executeButton", "feature", 1);
+  const premiumAutoTarget = consecutivePremiumAutoTarget(1);
+  if (premiumAutoTarget) return runAutomation("executeButton", premiumAutoTarget, 1);
   if (state.selectedAIIds.length !== 3) return showError("AI를 정확히 3개 선택해 주세요.");
   await submitJSON({
     buttonId: "executeButton",
     loadingText: "AI 실행 중...",
     url: "/api/problem-definition/run",
-    body: { idea: state.idea, selectedAIIds: state.selectedAIIds },
+    body: { idea: state.idea, selectedAIIds: state.selectedAIIds, useLiveAI: state.useLiveAI },
     onSuccess: (data) => {
       state.outputs = data.outputs;
       state.page = 2;
     }
   });
+}
+
+function consecutivePremiumAutoTarget(startStep) {
+  const targets = ["problem", "persona", "scenario", "feature", "workflow", "uiux", "code", "media", "business", "files"];
+  let lastChecked = 0;
+  for (let step = startStep; step <= 10 && state.premiumSkipSteps.includes(step); step += 1) lastChecked = step;
+  return lastChecked ? targets[lastChecked - 1] : "";
+}
+
+async function advancePremium(nextStep, defaultPage) {
+  const target = state.plan === "premium" ? consecutivePremiumAutoTarget(nextStep) : "";
+  if (target) {
+    await runAutomatedPipeline(target, nextStep);
+  } else {
+    state.page = defaultPage;
+  }
+}
+
+function firstThree(list) {
+  return list.slice(0, 3).map((ai) => ai.id);
+}
+
+async function postJSON(url, body) {
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body)
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error);
+  return data;
+}
+
+async function runAutomation(buttonId, stopAt, startStage) {
+  const button = document.querySelector(`#${buttonId}`);
+  if (button) {
+    button.disabled = true;
+    button.textContent = "자동 제작 진행 중...";
+  }
+  try {
+    await runAutomatedPipeline(stopAt, startStage);
+    render();
+  } catch (error) {
+    showError(error.message);
+    if (button) {
+      button.disabled = false;
+      button.textContent = "다시 실행";
+    }
+  }
+}
+
+async function runAutomatedPipeline(stopAt = "files", startStage = 1) {
+  if (startStage <= 1) {
+    state.selectedAIIds = firstThree(state.aiList);
+    const problem = await postJSON("/api/problem-definition/run", { idea: state.idea, selectedAIIds: state.selectedAIIds, useLiveAI: state.useLiveAI });
+    state.outputs = problem.outputs;
+    state.merged = (await postJSON("/api/problem-definition/merge", { idea: state.idea, outputs: state.outputs })).merged;
+    if (stopAt === "problem") return void (state.page = 3);
+  }
+  if (startStage <= 2) {
+    state.personaSelectedAIIds = firstThree(state.personaAIList);
+    const persona = await postJSON("/api/persona/run", { idea: state.idea, problemDefinition: state.merged, selectedAIIds: state.personaSelectedAIIds, useLiveAI: state.useLiveAI });
+    state.personaOutputs = persona.outputs;
+    state.personaPrompt = persona.prompt;
+    state.personaMerged = (await postJSON("/api/persona/merge", { idea: state.idea, problemDefinition: state.merged, outputs: state.personaOutputs })).merged;
+    if (stopAt === "persona") return void (state.page = 5);
+  }
+  if (startStage <= 3) {
+    state.scenarioSelectedAIIds = firstThree(state.scenarioAIList);
+    const scenario = await postJSON("/api/scenario/run", { idea: state.idea, personaDefinition: state.personaMerged, selectedAIIds: state.scenarioSelectedAIIds, useLiveAI: state.useLiveAI });
+    state.scenarioOutputs = scenario.outputs;
+    state.scenarioPrompt = scenario.prompt;
+    state.scenarioMerged = (await postJSON("/api/scenario/merge", { idea: state.idea, personaDefinition: state.personaMerged, outputs: state.scenarioOutputs })).merged;
+    if (stopAt === "scenario") return void (state.page = 7);
+  }
+  if (startStage <= 4) {
+    state.featureSelectedAIIds = firstThree(state.featureAIList);
+    const feature = await postJSON("/api/features/run", { idea: state.idea, scenarioDefinition: state.scenarioMerged, selectedAIIds: state.featureSelectedAIIds, useLiveAI: state.useLiveAI });
+    state.featureOutputs = feature.outputs;
+    state.featurePrompt = feature.prompt;
+    state.featureMerged = (await postJSON("/api/features/merge", { idea: state.idea, scenarioDefinition: state.scenarioMerged, outputs: state.featureOutputs })).merged;
+    if (stopAt === "feature") return void (state.page = 9);
+  }
+  if (startStage <= 5) {
+    state.workflowSelectedAIIds = firstThree(state.workflowAIList);
+    const workflow = await postJSON("/api/workflow-design/run", { idea: state.idea, featureDefinition: state.featureMerged, selectedAIIds: state.workflowSelectedAIIds, useLiveAI: state.useLiveAI });
+    state.workflowOutputs = workflow.outputs;
+    state.workflowPrompt = workflow.prompt;
+    state.workflowMerged = (await postJSON("/api/workflow-design/merge", { idea: state.idea, featureDefinition: state.featureMerged, outputs: state.workflowOutputs })).merged;
+    if (stopAt === "workflow") return void (state.page = 11);
+  }
+  if (startStage <= 6) {
+    state.uiuxSelectedAIIds = firstThree(state.uiuxAIList);
+    const uiux = await postJSON("/api/uiux-design/run", { idea: state.idea, workflowDefinition: state.workflowMerged, selectedAIIds: state.uiuxSelectedAIIds, useLiveAI: state.useLiveAI });
+    state.uiuxOutputs = uiux.outputs;
+    state.uiuxPrompt = uiux.prompt;
+    state.uiuxMerged = (await postJSON("/api/uiux-design/merge", { idea: state.idea, workflowDefinition: state.workflowMerged, outputs: state.uiuxOutputs })).merged;
+    if (stopAt === "uiux") return void (state.page = 12);
+  }
+  if (startStage <= 7) {
+    state.codeSelectedAIIds = firstThree(state.codeAIList);
+    state.indexPageOutputs = (await postJSON("/api/code-generation/index-page", { idea: state.idea, uiuxDefinition: state.uiuxMerged, selectedAIIds: state.codeSelectedAIIds, useLiveAI: state.useLiveAI })).outputs;
+    state.finalIndexPageIndex = 0;
+    if (stopAt === "code") return void (state.page = 15);
+  }
+  if (startStage <= 8) {
+    state.mediaSelectedAIIds = firstThree(state.mediaAIList);
+    state.mediaOutputs = (await postJSON("/api/media-generation/run", {
+      idea: state.idea,
+      indexPage: state.indexPageOutputs[state.finalIndexPageIndex]?.preview,
+      selectedAIIds: state.mediaSelectedAIIds,
+      useLiveAI: state.useLiveAI
+    })).outputs;
+    state.finalMediaIndex = 0;
+    if (stopAt === "media") return void (state.page = 18);
+  }
+  if (startStage <= 9) {
+    state.businessSelectedAIIds = firstThree(state.businessAIList);
+    const business = await postJSON("/api/business-analysis/run", {
+      idea: state.idea,
+      indexPage: state.indexPageOutputs[state.finalIndexPageIndex]?.preview,
+      selectedVideo: state.mediaOutputs[state.finalMediaIndex],
+      selectedAIIds: state.businessSelectedAIIds,
+      useLiveAI: state.useLiveAI
+    });
+    state.businessOutputs = business.outputs;
+    state.businessPrompt = business.prompt;
+    state.businessMerged = (await postJSON("/api/business-analysis/merge", { idea: state.idea, outputs: state.businessOutputs })).merged;
+    if (stopAt === "business") return void (state.page = 21);
+  }
+  state.presentationSelectedAIIds = firstThree(state.presentationAIList);
+  const presentation = await postJSON("/api/presentation-generation/run", {
+    idea: state.idea,
+    businessReport: state.businessMerged,
+    selectedAIIds: state.presentationSelectedAIIds,
+    useLiveAI: state.useLiveAI
+  });
+  state.presentationOutputs = presentation.outputs;
+  state.presentationPrompt = presentation.prompt;
+  const filesResponse = await fetch("/api/presentation-generation/files");
+  const files = await filesResponse.json();
+  if (!filesResponse.ok) throw new Error(files.error);
+  state.presentationFiles = files;
+  state.page = 23;
 }
 
 async function mergeOutputs() {
@@ -1090,9 +1340,9 @@ async function mergeOutputs() {
     loadingText: "취합 중...",
     url: "/api/problem-definition/merge",
     body: { idea: state.idea, outputs: state.outputs },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       state.merged = data.merged;
-      state.page = 3;
+      await advancePremium(2, 3);
     }
   });
 }
@@ -1106,7 +1356,7 @@ async function executePersonaAIs() {
     buttonId: "personaRunButton",
     loadingText: "타겟 분석 중...",
     url: "/api/persona/run",
-    body: { idea: state.idea, problemDefinition: state.merged, selectedAIIds: state.personaSelectedAIIds },
+    body: { idea: state.idea, problemDefinition: state.merged, selectedAIIds: state.personaSelectedAIIds, useLiveAI: state.useLiveAI },
     onSuccess: (data) => {
       state.personaOutputs = data.outputs;
       state.personaPrompt = data.prompt;
@@ -1122,9 +1372,9 @@ async function mergePersonaOutputs() {
     loadingText: "Merge 서버 취합 중...",
     url: "/api/persona/merge",
     body: { idea: state.idea, problemDefinition: state.merged, outputs: state.personaOutputs },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       state.personaMerged = data.merged;
-      state.page = 5;
+      await advancePremium(3, 5);
     }
   });
 }
@@ -1138,7 +1388,7 @@ async function executeScenarioAIs() {
     buttonId: "scenarioRunButton",
     loadingText: "시나리오 작성 중...",
     url: "/api/scenario/run",
-    body: { idea: state.idea, personaDefinition: state.personaMerged, selectedAIIds: state.scenarioSelectedAIIds },
+    body: { idea: state.idea, personaDefinition: state.personaMerged, selectedAIIds: state.scenarioSelectedAIIds, useLiveAI: state.useLiveAI },
     onSuccess: (data) => {
       state.scenarioOutputs = data.outputs;
       state.scenarioPrompt = data.prompt;
@@ -1154,9 +1404,9 @@ async function mergeScenarioOutputs() {
     loadingText: "Merge 서버 취합 중...",
     url: "/api/scenario/merge",
     body: { idea: state.idea, personaDefinition: state.personaMerged, outputs: state.scenarioOutputs },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       state.scenarioMerged = data.merged;
-      state.page = 7;
+      await advancePremium(4, 7);
     }
   });
 }
@@ -1170,7 +1420,7 @@ async function executeFeatureAIs() {
     buttonId: "featureRunButton",
     loadingText: "핵심 기능 정의 중...",
     url: "/api/features/run",
-    body: { idea: state.idea, scenarioDefinition: state.scenarioMerged, selectedAIIds: state.featureSelectedAIIds },
+    body: { idea: state.idea, scenarioDefinition: state.scenarioMerged, selectedAIIds: state.featureSelectedAIIds, useLiveAI: state.useLiveAI },
     onSuccess: (data) => {
       state.featureOutputs = data.outputs;
       state.featurePrompt = data.prompt;
@@ -1186,9 +1436,9 @@ async function mergeFeatureOutputs() {
     loadingText: "Merge 서버 취합 중...",
     url: "/api/features/merge",
     body: { idea: state.idea, scenarioDefinition: state.scenarioMerged, outputs: state.featureOutputs },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       state.featureMerged = data.merged;
-      state.page = 9;
+      await advancePremium(5, 9);
     }
   });
 }
@@ -1202,7 +1452,7 @@ async function executeWorkflowAIs() {
     buttonId: "workflowRunButton",
     loadingText: "WorkFlow 설계 중...",
     url: "/api/workflow-design/run",
-    body: { idea: state.idea, featureDefinition: state.featureMerged, selectedAIIds: state.workflowSelectedAIIds },
+    body: { idea: state.idea, featureDefinition: state.featureMerged, selectedAIIds: state.workflowSelectedAIIds, useLiveAI: state.useLiveAI },
     onSuccess: (data) => {
       state.workflowOutputs = data.outputs;
       state.workflowPrompt = data.prompt;
@@ -1218,9 +1468,9 @@ async function mergeWorkflowOutputs() {
     loadingText: "Merge 서버 취합 중...",
     url: "/api/workflow-design/merge",
     body: { idea: state.idea, featureDefinition: state.featureMerged, outputs: state.workflowOutputs },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       state.workflowMerged = data.merged;
-      state.page = 11;
+      await advancePremium(6, 11);
     }
   });
 }
@@ -1234,7 +1484,7 @@ async function executeUIUXAIs() {
     buttonId: "uiuxRunButton",
     loadingText: "UI / UX 화면 구성 중...",
     url: "/api/uiux-design/run",
-    body: { idea: state.idea, workflowDefinition: state.workflowMerged, selectedAIIds: state.uiuxSelectedAIIds },
+    body: { idea: state.idea, workflowDefinition: state.workflowMerged, selectedAIIds: state.uiuxSelectedAIIds, useLiveAI: state.useLiveAI },
     onSuccess: async (data) => {
       state.uiuxOutputs = data.outputs;
       state.uiuxPrompt = data.prompt;
@@ -1265,10 +1515,10 @@ async function executeIndexPageAIs() {
     buttonId: "codeRunButton",
     loadingText: "Index Page 생성 중...",
     url: "/api/code-generation/index-page",
-    body: { idea: state.idea, uiuxDefinition: state.uiuxMerged, selectedAIIds: state.codeSelectedAIIds },
-    onSuccess: (data) => {
+    body: { idea: state.idea, uiuxDefinition: state.uiuxMerged, selectedAIIds: state.codeSelectedAIIds, useLiveAI: state.useLiveAI },
+    onSuccess: async (data) => {
       state.indexPageOutputs = data.outputs;
-      state.page = 15;
+      await advancePremium(8, 15);
     }
   });
 }
@@ -1280,10 +1530,10 @@ async function executeMediaAIs() {
     buttonId: "mediaRunButton",
     loadingText: "이미지 및 영상 기획 중...",
     url: "/api/media-generation/run",
-    body: { idea: state.idea, indexPage: finalIndexPage, selectedAIIds: state.mediaSelectedAIIds },
-    onSuccess: (data) => {
+    body: { idea: state.idea, indexPage: finalIndexPage, selectedAIIds: state.mediaSelectedAIIds, useLiveAI: state.useLiveAI },
+    onSuccess: async (data) => {
       state.mediaOutputs = data.outputs;
-      state.page = 18;
+      await advancePremium(9, 18);
     }
   });
 }
@@ -1296,7 +1546,7 @@ async function executeBusinessAIs() {
     buttonId: "businessRunButton",
     loadingText: "사업성 분석 중...",
     url: "/api/business-analysis/run",
-    body: { idea: state.idea, indexPage: finalIndexPage, selectedVideo, selectedAIIds: state.businessSelectedAIIds },
+    body: { idea: state.idea, indexPage: finalIndexPage, selectedVideo, selectedAIIds: state.businessSelectedAIIds, useLiveAI: state.useLiveAI },
     onSuccess: (data) => {
       state.businessOutputs = data.outputs;
       state.businessPrompt = data.prompt;
@@ -1312,9 +1562,9 @@ async function mergeBusinessOutputs() {
     loadingText: "Merge 서버 취합 중...",
     url: "/api/business-analysis/merge",
     body: { idea: state.idea, outputs: state.businessOutputs },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       state.businessMerged = data.merged;
-      state.page = 21;
+      await advancePremium(10, 21);
     }
   });
 }
@@ -1328,7 +1578,7 @@ async function executePresentationAIs() {
     buttonId: "presentationRunButton",
     loadingText: "PPT 제안서 구성 중...",
     url: "/api/presentation-generation/run",
-    body: { idea: state.idea, businessReport: state.businessMerged, selectedAIIds: state.presentationSelectedAIIds },
+    body: { idea: state.idea, businessReport: state.businessMerged, selectedAIIds: state.presentationSelectedAIIds, useLiveAI: state.useLiveAI },
     onSuccess: (data) => {
       state.presentationOutputs = data.outputs;
       state.presentationPrompt = data.prompt;

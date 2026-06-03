@@ -43,3 +43,16 @@ POST /api/problem-definition/merge
 
 The original multi-stage harness API remains available under `/api/runs`.
 
+## Real AI providers
+
+Copy `.env.example` to `.env.ai`, add local keys, and start the server normally. `AI_PROVIDER_MODE=hybrid` uses configured OpenAI, Gemini, Claude, OpenRouter, and Groq text APIs and falls back to local harness responses when a key is missing or a provider is temporarily unavailable.
+
+The sidebar connection toggle defaults to OFF. OFF always uses local test responses without calling external APIs. ON attempts configured real APIs and keeps the local fallback for unavailable providers.
+
+For media generation, ON starts asynchronous Runway video tasks for the selected Runway-backed models. The media page shows task status, lets the user refresh completed tasks, and exposes the actual generated video for playback and download. OFF keeps the local motion preview.
+
+Provider status can be checked without exposing secrets:
+
+```text
+GET /api/providers/status
+```

@@ -1,41 +1,22 @@
-const availableAIs = [
-  {
-    id: "problem-framer",
-    name: "Problem Framer AI",
-    fit: 98,
-    description: "사용자의 불편과 기존 방식의 한계를 명확한 문제 문장으로 정리합니다."
-  },
-  {
-    id: "goal-setter",
-    name: "Goal Setter AI",
-    fit: 95,
-    description: "해결 목표와 기대 효과를 측정 가능한 형태로 구체화합니다."
-  },
-  {
-    id: "customer-lens",
-    name: "Customer Lens AI",
-    fit: 92,
-    description: "사용자 입장에서 문제 상황과 변화가 필요한 순간을 분석합니다."
-  },
-  {
-    id: "market-context",
-    name: "Market Context AI",
-    fit: 88,
-    description: "시장 맥락과 대체 수단을 기준으로 문제의 중요도를 보강합니다."
-  },
-  {
-    id: "feasibility-check",
-    name: "Feasibility Check AI",
-    fit: 84,
-    description: "초기 MVP에서 해결 가능한 범위와 제외할 범위를 구분합니다."
-  }
-];
+import { generateText } from "./providers/text.js";
+import { createTextAIList, withTextConnections } from "./providers/catalog.js";
+
+const availableAIs = createTextAIList({
+  descriptions: [
+    "복합적인 사업 아이디어를 문제 정의, 목표, 검증 지표로 정교하게 구조화합니다.",
+    "긴 문맥과 복잡한 요구사항을 분석하여 사업 목표와 사용자 문제를 구체화합니다.",
+    "빠른 응답으로 사용자 관점의 문제 상황과 개선 목표를 정리합니다.",
+    "연결 가능한 모델을 자동 선택하여 문제 정의 관점을 보완합니다.",
+    "빠른 추론으로 초기 MVP 범위와 핵심 검증 항목을 정리합니다."
+  ],
+  fallbackIds: ["problem-framer", "goal-setter", "customer-lens", "market-context", "feasibility-check"]
+});
 
 export function listProblemDefinitionAIs() {
-  return availableAIs;
+  return withTextConnections(availableAIs);
 }
 
-export async function runProblemDefinition({ idea, selectedAIIds }) {
+export async function runProblemDefinition({ idea, selectedAIIds, useLiveAI = false }) {
   const selected = selectedAIIds.map((id) => availableAIs.find((ai) => ai.id === id)).filter(Boolean);
   if (!idea?.trim()) throw new Error("아이디어를 입력해 주세요.");
   if (selected.length !== 3) throw new Error("AI를 정확히 3개 선택해 주세요.");
@@ -44,11 +25,22 @@ export async function runProblemDefinition({ idea, selectedAIIds }) {
     idea,
     outputs: await Promise.all(selected.map(async (ai, index) => {
       await sleep(80 + index * 50);
+      const generated = await generateText({
+        provider: ai.provider,
+        model: ai.model,
+        useLiveAI,
+        prompt: `당신은 MVP 문제 정의 전문가입니다.\n다음 아이디어의 핵심 문제, 기존 방식의 한계, 개선 목표, 검증 지표를 구체적으로 작성하세요.\n\n아이디어: ${idea}`,
+        fallback: outputFor(ai.fallbackId, idea)
+      });
       return {
         aiId: ai.id,
         aiName: ai.name,
+        provider: ai.provider,
+        model: ai.model,
         fit: ai.fit,
-        content: outputFor(ai.id, idea)
+        content: generated.content,
+        source: generated.source,
+        actualModel: generated.actualModel
       };
     }))
   };
@@ -135,4 +127,3 @@ function compact(value) {
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
-

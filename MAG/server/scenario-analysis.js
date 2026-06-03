@@ -1,16 +1,22 @@
-const availableAIs = [
-  { id: "openai-gpt-5-4", provider: "OpenAI", model: "gpt-5.4", name: "OpenAI GPT-5.4", fit: 98, description: "복합 사용자 맥락을 단계별 행동 흐름과 검증 가능한 시나리오로 구조화합니다." },
-  { id: "anthropic-claude-opus-4-1", provider: "Anthropic", model: "claude-opus-4-1-20250805", name: "Claude Opus 4.1", fit: 97, description: "페르소나의 감정, 동기, 행동 변화를 자연스러운 이용 이야기로 구체화합니다." },
-  { id: "google-gemini-3-pro", provider: "Google", model: "gemini-3-pro-preview", name: "Gemini 3 Pro Preview", fit: 95, description: "사용 전후 상황과 접점을 폭넓게 비교하여 서비스 이용 흐름을 보완합니다." },
-  { id: "mistral-medium-3-5", provider: "Mistral AI", model: "mistral-medium-3-5", name: "Mistral Medium 3.5", fit: 92, description: "핵심 행동을 빠르게 정리하고 MVP에서 검증할 사용자 여정을 명확히 제안합니다." },
-  { id: "cohere-command-a-plus", provider: "Cohere", model: "command-a-plus-05-2026", name: "Cohere Command A+", fit: 90, description: "비즈니스 맥락을 유지하면서 단계별 사용자 행동과 기대 결과를 구조화합니다." }
-];
+import { generateText } from "./providers/text.js";
+import { createTextAIList, withTextConnections } from "./providers/catalog.js";
+
+const availableAIs = createTextAIList({
+  descriptions: [
+    "복합 사용자 맥락을 단계별 행동 흐름과 검증 가능한 시나리오로 구조화합니다.",
+    "사용 전후 상황과 접점을 폭넓게 비교하여 서비스 이용 흐름을 보완합니다.",
+    "빠른 응답으로 핵심 행동과 기대 결과를 명확하게 정리합니다.",
+    "연결 가능한 모델을 자동 선택하여 사용자 여정을 보완합니다.",
+    "빠른 추론으로 MVP에서 검증할 핵심 시나리오를 제안합니다."
+  ],
+  fallbackIds: ["openai-gpt-5-4", "google-gemini-3-pro", "google-gemini-3-pro", "cohere-command-a-plus", "mistral-medium-3-5"]
+});
 
 export function listScenarioAIs() {
-  return availableAIs;
+  return withTextConnections(availableAIs);
 }
 
-export async function runScenarioAnalysis({ idea, personaDefinition, selectedAIIds }) {
+export async function runScenarioAnalysis({ idea, personaDefinition, selectedAIIds, useLiveAI = false }) {
   const selected = selectedAIIds.map((id) => availableAIs.find((ai) => ai.id === id)).filter(Boolean);
   if (!idea?.trim()) throw new Error("아이디어를 입력해 주세요.");
   if (!personaDefinition?.trim()) throw new Error("편집된 타겟 및 페르소나 정의가 필요합니다.");
@@ -23,13 +29,16 @@ export async function runScenarioAnalysis({ idea, personaDefinition, selectedAII
     prompt,
     outputs: await Promise.all(selected.map(async (ai, index) => {
       await sleep(80 + index * 50);
+      const generated = await generateText({ provider: ai.provider, model: ai.model, prompt, fallback: outputFor(ai.fallbackId, idea, personaDefinition), useLiveAI });
       return {
         aiId: ai.id,
         aiName: ai.name,
         provider: ai.provider,
         model: ai.model,
         fit: ai.fit,
-        content: outputFor(ai.id, idea, personaDefinition)
+        content: generated.content,
+        source: generated.source,
+        actualModel: generated.actualModel
       };
     }))
   };

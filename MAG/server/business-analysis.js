@@ -1,16 +1,22 @@
-const availableAIs = [
-  { id: "openai-gpt-5-4", provider: "OpenAI", model: "gpt-5.4", name: "OpenAI GPT-5.4", fit: 98, description: "시장성, 기술성, 수익성, 리스크를 연결하여 실행 가능한 사업성 분석을 작성합니다." },
-  { id: "anthropic-claude-opus-4-1", provider: "Anthropic", model: "claude-opus-4-1-20250805", name: "Claude Opus 4.1", fit: 97, description: "사업 아이디어의 맥락과 고객 문제를 깊이 읽고 설득력 있는 사업 분석 문서를 작성합니다." },
-  { id: "google-gemini-3-pro", provider: "Google", model: "gemini-3-pro-preview", name: "Gemini 3 Pro Preview", fit: 95, description: "시장 구조, 경쟁 환경, 성장 가능성을 폭넓게 비교하여 분석을 보완합니다." },
-  { id: "cohere-command-a-plus", provider: "Cohere", model: "command-a-plus-05-2026", name: "Cohere Command A+", fit: 92, description: "B2B와 운영 관점에서 수익 구조, 도입 가치, 실행 전략을 명확하게 정리합니다." },
-  { id: "mistral-medium-3-5", provider: "Mistral AI", model: "mistral-medium-3-5", name: "Mistral Medium 3.5", fit: 90, description: "초기 MVP의 검증 범위와 현실적인 리스크를 간결하게 분석합니다." }
-];
+import { generateText } from "./providers/text.js";
+import { createTextAIList, withTextConnections } from "./providers/catalog.js";
+
+const availableAIs = createTextAIList({
+  descriptions: [
+    "시장성, 기술성, 수익성, 리스크를 연결하여 실행 가능한 사업 분석을 작성합니다.",
+    "시장 구조와 성장 가능성을 폭넓게 비교하여 분석을 보완합니다.",
+    "빠른 응답으로 BM과 유사 서비스 비교를 정리합니다.",
+    "연결 가능한 모델을 자동 선택하여 사업성 관점을 보완합니다.",
+    "빠른 추론으로 검증 범위와 현실적인 리스크를 분석합니다."
+  ],
+  fallbackIds: ["openai-gpt-5-4", "google-gemini-3-pro", "google-gemini-3-pro", "cohere-command-a-plus", "mistral-medium-3-5"]
+});
 
 export function listBusinessAnalysisAIs() {
-  return availableAIs;
+  return withTextConnections(availableAIs);
 }
 
-export async function runBusinessAnalysis({ idea, indexPage, selectedVideo, selectedAIIds }) {
+export async function runBusinessAnalysis({ idea, indexPage, selectedVideo, selectedAIIds, useLiveAI = false }) {
   const selected = selectedAIIds.map((id) => availableAIs.find((ai) => ai.id === id)).filter(Boolean);
   if (!idea?.trim()) throw new Error("아이디어를 입력해 주세요.");
   if (!indexPage?.headline) throw new Error("확정된 Index Page가 필요합니다.");
@@ -25,13 +31,16 @@ export async function runBusinessAnalysis({ idea, indexPage, selectedVideo, sele
     prompt,
     outputs: await Promise.all(selected.map(async (ai, index) => {
       await sleep(80 + index * 50);
+      const generated = await generateText({ provider: ai.provider, model: ai.model, prompt, fallback: outputFor(ai.fallbackId, idea, selectedVideo), useLiveAI });
       return {
         aiId: ai.id,
         aiName: ai.name,
         provider: ai.provider,
         model: ai.model,
         fit: ai.fit,
-        content: outputFor(ai.id, idea, selectedVideo)
+        content: generated.content,
+        source: generated.source,
+        actualModel: generated.actualModel
       };
     }))
   };
