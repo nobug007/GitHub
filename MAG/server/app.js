@@ -1,5 +1,5 @@
 import http from "node:http";
-import { readFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 import { extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 import { advanceRun, createRun, runToEnd } from "./pipeline/orchestrator.js";
@@ -18,15 +18,27 @@ import { listFeatureAIs, mergeFeatureDefinition, runFeatureDefinition } from "./
 import { listWorkflowAIs, mergeWorkflowDesign, runWorkflowDesign } from "./workflow-design.js";
 import { listUIUXAIs, mergeUIUXDesign, runUIUXDesign } from "./uiux-design.js";
 import { listCodeGenerationAIs, runIndexPageGeneration } from "./code-generation.js";
-import { getMediaTask, listMediaGenerationAIs, runMediaGeneration } from "./media-generation.js";
+import { getMediaTask, getRunwayOrganizationStatus, listMediaGenerationAIs, runMediaGeneration } from "./media-generation.js";
 import { listBusinessAnalysisAIs, mergeBusinessAnalysis, runBusinessAnalysis } from "./business-analysis.js";
 import { listPresentationAIs, runPresentationGeneration } from "./presentation-generation.js";
-import { providerStatus } from "./providers/text.js";
+import { getTextQuotaStatus, providerStatus } from "./providers/text.js";
 import { providers, stages } from "./workflow.js";
 
 const serverDir = fileURLToPath(new URL(".", import.meta.url));
 const clientDir = normalize(join(serverDir, "..", "client"));
 const deliverablesDir = normalize(join(serverDir, "..", "deliverables"));
+const envFilePath = normalize(join(serverDir, "..", ".env.ai"));
+const apiKeyFields = [
+  "OPENAI_API_KEY",
+  "GEMINI_API_KEY",
+  "ANTHROPIC_API_KEY",
+  "OPENROUTER_API_KEY",
+  "OpenRouter_API_KEY",
+  "GROQ_API_KEY",
+  "RUNWAY_API_KEY",
+  "SORA_API_KEY",
+  "VEO_API_KEY"
+];
 const presentationFiles = [
   { name: "MAG Copilot Proposal", file: "MAG-Copilot-Proposal.pptx", description: "표준 사업 제안서형 PPT" },
   { name: "MAG Canva Proposal", file: "MAG-Canva-Proposal.pptx", description: "밝은 비주얼 중심 PPT" },
@@ -50,7 +62,18 @@ export function createApp() {
       }
 
       if (req.method === "GET" && routePath === "/api/providers/status") {
-        return json(res, 200, providerStatus());
+        return json(res, 200, providerStatus(
+          { Runway: await getRunwayOrganizationStatus() },
+          await getTextQuotaStatus()
+        ));
+      }
+
+      if (req.method === "GET" && routePath === "/api/settings/keys") {
+        return json(res, 200, await apiKeySettings());
+      }
+
+      if (req.method === "POST" && routePath === "/api/settings/keys") {
+        return json(res, 200, await saveApiKeySettings(await body(req)));
       }
 
       if (req.method === "GET" && routePath === "/api/workflow") {
@@ -225,6 +248,65 @@ async function serveDeliverable(res, pathname) {
   } catch {
     return text(res, 404, "Not found");
   }
+}
+
+async function apiKeySettings() {
+  const env = await readEnvSettings();
+  return {
+    fields: apiKeyFields.map((name) => ({
+      name,
+      configured: Boolean(env[name] || process.env[name]),
+      masked: maskSecret(env[name] || process.env[name] || "")
+    }))
+  };
+}
+
+async function saveApiKeySettings(payload) {
+  const updates = payload?.keys || {};
+  const env = await readEnvSettings();
+  for (const name of apiKeyFields) {
+    if (!Object.prototype.hasOwnProperty.call(updates, name)) continue;
+    const value = String(updates[name] || "").trim();
+    if (!value) continue;
+    env[name] = value;
+    process.env[name] = value;
+  }
+  if (!env.PORT) env.PORT = process.env.PORT || "8787";
+  if (!env.AI_PROVIDER_MODE) env.AI_PROVIDER_MODE = process.env.AI_PROVIDER_MODE || "hybrid";
+  await writeEnvSettings(env);
+  return { ok: true, ...(await apiKeySettings()) };
+}
+
+async function readEnvSettings() {
+  const env = {};
+  try {
+    const content = await readFile(envFilePath, "utf8");
+    for (const line of content.split(/\r?\n/)) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith("#")) continue;
+      const separator = trimmed.indexOf("=");
+      if (separator < 1) continue;
+      env[trimmed.slice(0, separator).trim()] = trimmed.slice(separator + 1).trim();
+    }
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error;
+  }
+  return env;
+}
+
+async function writeEnvSettings(env) {
+  const ordered = ["PORT", "AI_PROVIDER_MODE", ...apiKeyFields];
+  const lines = [
+    "# Local secrets only. This file is ignored by Git.",
+    ...ordered.map((name) => `${name}=${env[name] || ""}`)
+  ];
+  await writeFile(envFilePath, `${lines.join("\n")}\n`, "utf8");
+}
+
+function maskSecret(value) {
+  if (!value) return "";
+  if (value.length <= 10) return "*".repeat(value.length);
+  return `${value.slice(0, 6)}...${value.slice(-4)}`;
 }
 
 function normalizeRoutePath(pathname) {

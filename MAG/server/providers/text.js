@@ -10,13 +10,13 @@ const recentEvents = {};
 export async function generateText({ provider, model: requestedModel, prompt, fallback, useLiveAI = false }) {
   const mode = useLiveAI ? process.env.AI_PROVIDER_MODE || "hybrid" : "mock";
   const settings = providerSettings[provider];
-  if (mode === "mock" || !settings) return localResult(fallback);
+  if (mode === "mock" || !settings) return localResult(fallback, mode === "mock" ? "live-toggle-off" : "unsupported-provider");
 
   const apiKey = readKey(settings.key);
   if (!apiKey) {
     if (mode === "real") throw new Error(`${settings.key}가 설정되지 않았습니다.`);
     recentEvents[provider] = { status: "fallback", reason: "missing-key" };
-    return localResult(fallback);
+    return localResult(fallback, "missing-key");
   }
 
   const model = requestedModel || process.env[settings.model] || settings.defaultModel;
@@ -28,7 +28,7 @@ export async function generateText({ provider, model: requestedModel, prompt, fa
     if (mode === "real") throw error;
     recentEvents[provider] = { status: "fallback", model, reason: sanitizeError(error.message) };
     console.warn(`[AI fallback] ${provider}: ${error.message}`);
-    return localResult(fallback);
+    return localResult(fallback, sanitizeError(error.message));
   }
 }
 
@@ -40,26 +40,83 @@ export function textProviderInfo(provider) {
   };
 }
 
-export function providerStatus() {
+export function providerStatus(mediaStatus = {}, textQuotaStatus = {}) {
   return {
     mode: process.env.AI_PROVIDER_MODE || "mock",
     text: Object.fromEntries(Object.entries(providerSettings).map(([provider, settings]) => [
       provider,
-      { configured: Boolean(readKey(settings.key)), model: process.env[settings.model] || settings.defaultModel }
+      {
+        configured: Boolean(readKey(settings.key)),
+        model: process.env[settings.model] || settings.defaultModel,
+        quota: textQuotaStatus[provider] || textQuotaFallback(provider)
+      }
     ])),
     media: {
       mode: "runway-live-on-toggle",
       note: "ON 상태에서 Runway 선택 모델은 실제 비동기 영상 작업을 시작합니다.",
       Sora: { configured: Boolean(process.env.SORA_API_KEY || process.env.OPENAI_API_KEY), integration: "configured-only" },
       Veo: { configured: Boolean(process.env.VEO_API_KEY || process.env.GEMINI_API_KEY), integration: "via-runway" },
-      Runway: { configured: Boolean(process.env.RUNWAY_API_KEY), integration: "live" }
+      Runway: mediaStatus.Runway || { configured: Boolean(process.env.RUNWAY_API_KEY), integration: "live" }
     },
     recentEvents
   };
 }
 
-function localResult(content) {
-  return { content, source: "mock", actualModel: "local-fallback" };
+export async function getTextQuotaStatus() {
+  const entries = await Promise.all(Object.entries(providerSettings).map(async ([provider, settings]) => [
+    provider,
+    await getProviderQuota(provider, settings)
+  ]));
+  return Object.fromEntries(entries);
+}
+
+async function getProviderQuota(provider, settings) {
+  const configured = Boolean(readKey(settings.key));
+  const event = recentEvents[provider];
+  if (!configured) return { configured: false, status: "missing-key", unit: "tokens", remaining: null, note: "API key required" };
+  if (event?.status === "fallback" && /429|quota|rate limit|billing|exceeded/i.test(event.reason || "")) {
+    return { configured: true, status: "quota-error", unit: "tokens", remaining: null, note: event.reason };
+  }
+  if (provider === "OpenRouter") return getOpenRouterCredits(settings);
+  return textQuotaFallback(provider);
+}
+
+async function getOpenRouterCredits(settings) {
+  const apiKey = readKey(settings.key);
+  try {
+    const data = await requestJSON("https://openrouter.ai/api/v1/credits", {
+      headers: { authorization: `Bearer ${apiKey}` }
+    });
+    const credits = data.data || data;
+    const totalCredits = Number(credits.total_credits ?? credits.totalCredits ?? credits.limit ?? NaN);
+    const totalUsage = Number(credits.total_usage ?? credits.totalUsage ?? credits.usage ?? 0);
+    const remaining = Number.isFinite(totalCredits) ? Math.max(0, totalCredits - totalUsage) : null;
+    return {
+      configured: true,
+      status: remaining === null ? "unknown" : "available",
+      unit: "credits",
+      remaining,
+      total: Number.isFinite(totalCredits) ? totalCredits : null,
+      used: Number.isFinite(totalUsage) ? totalUsage : null,
+      note: remaining === null ? "Credit fields unavailable" : ""
+    };
+  } catch (error) {
+    return { configured: true, status: "lookup-error", unit: "credits", remaining: null, note: sanitizeError(error.message) };
+  }
+}
+
+function textQuotaFallback(provider) {
+  return {
+    configured: Boolean(readKey(providerSettings[provider]?.key)),
+    status: "unsupported",
+    unit: "tokens",
+    remaining: null,
+    note: "Provider does not expose remaining-token balance through this app"
+  };
+}
+
+function localResult(content, reason = "local-fallback") {
+  return { content, source: "mock", actualModel: "local-fallback", fallbackReason: reason };
 }
 
 async function runOpenAI({ apiKey, model, prompt }) {

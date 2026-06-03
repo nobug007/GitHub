@@ -24,18 +24,19 @@ export async function runMediaGeneration({ idea, indexPage, selectedAIIds, useLi
     outputs: await Promise.all(selected.map(async (ai, index) => {
       await sleep(80 + index * 50);
       const prompt = buildVideoPrompt({ idea, indexPage, index });
-      const task = useLiveAI && ai.provider === "Runway"
-        ? await startRunwayVideo({ model: ai.model, prompt })
-        : null;
+      const taskResult = useLiveAI && ai.provider === "Runway"
+        ? await tryStartRunwayVideo({ model: ai.model, prompt })
+        : { task: null, error: "" };
       return {
         aiId: ai.id,
         aiName: ai.name,
         provider: ai.provider,
         model: ai.model,
         fit: ai.fit,
-        source: task ? "live" : "mock",
-        taskId: task?.id || "",
-        taskStatus: task ? "PENDING" : "PREVIEW",
+        source: taskResult.task ? "live" : "mock",
+        taskId: taskResult.task?.id || "",
+        taskStatus: taskResult.task ? "PENDING" : "PREVIEW",
+        taskError: taskResult.error,
         summary: `"${idea}"의 Index Page를 기준으로 5개의 작동 이미지와 1개의 데모 영상 시나리오를 구성합니다.`,
         deliverables: ["작동 이미지 5개", "데모 영상 시나리오", "영상 장면 구성표"]
       };
@@ -50,19 +51,69 @@ export async function getMediaTask(taskId) {
     signal: AbortSignal.timeout(45000)
   });
   const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(`${response.status} ${data.error || data.message || "Runway 작업 조회 실패"}`);
+  if (!response.ok) throw new Error(formatRunwayError(response.status, data, "Runway 작업 조회 실패"));
   return data;
+}
+
+export async function getRunwayOrganizationStatus() {
+  if (!process.env.RUNWAY_API_KEY) {
+    return { configured: false, integration: "live", creditBalance: null, error: "RUNWAY_API_KEY missing" };
+  }
+  try {
+    const response = await fetch("https://api.dev.runwayml.com/v1/organization", {
+      headers: runwayHeaders(),
+      signal: AbortSignal.timeout(15000)
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(formatRunwayError(response.status, data, "Runway organization lookup failed"));
+    return {
+      configured: true,
+      integration: "live",
+      creditBalance: data.creditBalance ?? null,
+      maxMonthlyCreditSpend: data.tier?.maxMonthlyCreditSpend ?? null,
+      usage: data.usage || null,
+      error: ""
+    };
+  } catch (error) {
+    return {
+      configured: true,
+      integration: "live",
+      creditBalance: null,
+      error: error.message
+    };
+  }
+}
+
+export async function startRunwayImage({ prompt }) {
+  const response = await fetch("https://api.dev.runwayml.com/v1/text_to_image", {
+    method: "POST",
+    headers: { ...runwayHeaders(), "content-type": "application/json" },
+    body: JSON.stringify({ model: "gen4_image", promptText: prompt.slice(0, 1000), ratio: "1360:768" }),
+    signal: AbortSignal.timeout(45000)
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(formatRunwayError(response.status, data, "Runway image generation failed"));
+  return data;
+}
+
+async function tryStartRunwayVideo({ model, prompt }) {
+  try {
+    return { task: await startRunwayVideo({ model, prompt }), error: "" };
+  } catch (error) {
+    if (isRecoverableRunwayError(error.message)) return { task: null, error: "" };
+    return { task: null, error: error.message };
+  }
 }
 
 async function startRunwayVideo({ model, prompt }) {
   const response = await fetch("https://api.dev.runwayml.com/v1/text_to_video", {
     method: "POST",
     headers: { ...runwayHeaders(), "content-type": "application/json" },
-    body: JSON.stringify({ model, promptText: prompt.slice(0, 1000), ratio: "1280:720", duration: 10 }),
+    body: JSON.stringify({ model, promptText: prompt.slice(0, 1000), ratio: "1280:720", duration: 5 }),
     signal: AbortSignal.timeout(45000)
   });
   const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(`${response.status} ${data.error || data.message || "Runway 영상 생성 실패"}`);
+  if (!response.ok) throw new Error(formatRunwayError(response.status, data, "Runway 영상 생성 실패"));
   return data;
 }
 
@@ -75,6 +126,17 @@ function runwayHeaders() {
 function buildVideoPrompt({ idea, indexPage, index }) {
   const moods = ["clean cinematic product demo", "energetic startup launch film", "polished interface walkthrough"];
   return `${moods[index]}. Show a bright modern SaaS interface for ${idea}. Begin with an idea input, then three AI engines analyzing in parallel, a merge result, UI screens appearing, and a final downloadable proposal. Use readable interface-like visual structure, blue accents, smooth camera motion, no logos, no tiny text. Headline concept: ${indexPage.headline}`;
+}
+
+function formatRunwayError(status, data, fallback) {
+  const issues = Array.isArray(data.issues)
+    ? ` ${data.issues.map((issue) => [Array.isArray(issue.path) ? issue.path.join(".") : "", issue.message].filter(Boolean).join(": ")).join("; ")}`
+    : "";
+  return `${status} ${data.error || data.message || fallback}${issues}`;
+}
+
+export function isRecoverableRunwayError(message) {
+  return /not have enough credits|insufficient credits|rate limit|429/i.test(String(message));
 }
 
 function sleep(ms) {

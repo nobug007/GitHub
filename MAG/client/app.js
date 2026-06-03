@@ -14,6 +14,7 @@ const state = {
   plan: "premium",
   premiumSkipSteps: [],
   useLiveAI: false,
+  providerStatus: null,
   idea: "",
   aiList: [],
   selectedAIIds: [],
@@ -68,7 +69,7 @@ const state = {
 };
 
 async function boot() {
-  const [problemResponse, personaResponse, scenarioResponse, featureResponse, workflowResponse, uiuxResponse, codeResponse, mediaResponse, businessResponse, presentationResponse] = await Promise.all([
+  const [problemResponse, personaResponse, scenarioResponse, featureResponse, workflowResponse, uiuxResponse, codeResponse, mediaResponse, businessResponse, presentationResponse, providerStatusResponse] = await Promise.all([
     fetch(relativeUrl("/api/problem-definition/ais")),
     fetch(relativeUrl("/api/persona/ais")),
     fetch(relativeUrl("/api/scenario/ais")),
@@ -78,7 +79,8 @@ async function boot() {
     fetch(relativeUrl("/api/code-generation/ais")),
     fetch(relativeUrl("/api/media-generation/ais")),
     fetch(relativeUrl("/api/business-analysis/ais")),
-    fetch(relativeUrl("/api/presentation-generation/ais"))
+    fetch(relativeUrl("/api/presentation-generation/ais")),
+    fetch(relativeUrl("/api/providers/status"))
   ]);
   state.aiList = await problemResponse.json();
   state.personaAIList = await personaResponse.json();
@@ -90,6 +92,8 @@ async function boot() {
   state.mediaAIList = await mediaResponse.json();
   state.businessAIList = await businessResponse.json();
   state.presentationAIList = await presentationResponse.json();
+  state.providerStatus = await providerStatusResponse.json();
+  initSettingsModal();
   render();
 }
 
@@ -117,6 +121,206 @@ function render() {
   if (state.page === 21) return renderBusinessMergedPage();
   if (state.page === 22) return renderPresentationOutputPage();
   return renderPresentationFilesPage();
+}
+
+function initSettingsModal() {
+  const button = document.querySelector("#settingsButton");
+  if (!button || button.dataset.bound) return;
+  button.dataset.bound = "true";
+  button.addEventListener("click", openSettingsModal);
+}
+
+async function legacyOpenSettingsModal() {
+  let modal = document.querySelector("#apiKeyModal");
+  if (!modal) {
+    modal = document.createElement("section");
+    modal.id = "apiKeyModal";
+    modal.className = "settings-modal hidden";
+    document.body.append(modal);
+  }
+  modal.classList.remove("hidden");
+  modal.innerHTML = `<div class="settings-dialog"><p class="helper">API Key 정보를 불러오는 중...</p></div>`;
+  try {
+    const response = await fetch(relativeUrl("/api/settings/keys"));
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error);
+    renderSettingsModal(data.fields || []);
+  } catch (error) {
+    modal.innerHTML = `
+      <div class="settings-dialog">
+        <header><h2>API Key 설정</h2><button class="icon-button" type="button" data-close-settings>×</button></header>
+        <div class="error">${escapeHtml(error.message)}</div>
+      </div>
+    `;
+    bindSettingsClose();
+  }
+}
+
+function legacyRenderSettingsModal(fields) {
+  const modal = document.querySelector("#apiKeyModal");
+  modal.innerHTML = `
+    <div class="settings-dialog">
+      <header>
+        <div>
+          <h2>API Key 설정</h2>
+          <p>비워 둔 항목은 기존 키를 유지합니다. 저장하면 현재 서버에도 바로 반영됩니다.</p>
+        </div>
+        <button class="icon-button" type="button" data-close-settings>×</button>
+      </header>
+      <form id="apiKeyForm" class="settings-form">
+        ${fields.map((field) => `
+          <label>
+            <span>${escapeHtml(apiKeyLabel(field.name))}</span>
+            <small>${field.configured ? `현재: ${escapeHtml(field.masked)}` : "현재: 미설정"}</small>
+            <input type="password" name="${escapeHtml(field.name)}" autocomplete="off" placeholder="새 키를 입력하면 교체됩니다.">
+          </label>
+        `).join("")}
+        <div id="settingsMessage"></div>
+        <div class="settings-actions">
+          <button class="secondary" type="button" data-close-settings>닫기</button>
+          <button class="primary" type="submit">저장</button>
+        </div>
+      </form>
+    </div>
+  `;
+  bindSettingsClose();
+  document.querySelector("#apiKeyForm").addEventListener("submit", saveApiKeys);
+}
+
+async function legacySaveApiKeys(event) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const button = form.querySelector("button[type='submit']");
+  const message = document.querySelector("#settingsMessage");
+  const keys = Object.fromEntries([...new FormData(form).entries()].filter(([, value]) => String(value).trim()));
+  button.disabled = true;
+  button.textContent = "저장 중...";
+  try {
+    const response = await fetch(relativeUrl("/api/settings/keys"), {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ keys })
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error);
+    const statusResponse = await fetch(relativeUrl("/api/providers/status"));
+    state.providerStatus = await statusResponse.json();
+    message.innerHTML = `<div class="success">저장했습니다. AI 리스트 상태가 갱신되었습니다.</div>`;
+    renderSettingsModal(data.fields || []);
+    render();
+  } catch (error) {
+    message.innerHTML = `<div class="error">${escapeHtml(error.message)}</div>`;
+  } finally {
+    button.disabled = false;
+    button.textContent = "저장";
+  }
+}
+
+function bindSettingsClose() {
+  document.querySelectorAll("[data-close-settings]").forEach((button) => {
+    button.addEventListener("click", () => document.querySelector("#apiKeyModal")?.classList.add("hidden"));
+  });
+}
+
+function apiKeyLabel(name) {
+  const labels = {
+    OPENAI_API_KEY: "OpenAI API Key",
+    GEMINI_API_KEY: "Google Gemini API Key",
+    ANTHROPIC_API_KEY: "Anthropic API Key",
+    OPENROUTER_API_KEY: "OpenRouter API Key",
+    OpenRouter_API_KEY: "OpenRouter API Key (legacy)",
+    GROQ_API_KEY: "Groq API Key",
+    RUNWAY_API_KEY: "Runway API Key",
+    SORA_API_KEY: "Sora API Key",
+    VEO_API_KEY: "Veo API Key"
+  };
+  return labels[name] || name;
+}
+
+async function openSettingsModal() {
+  let modal = document.querySelector("#apiKeyModal");
+  if (!modal) {
+    modal = document.createElement("section");
+    modal.id = "apiKeyModal";
+    modal.className = "settings-modal hidden";
+    document.body.append(modal);
+  }
+  modal.classList.remove("hidden");
+  modal.innerHTML = `<div class="settings-dialog"><p class="helper">API Key 정보를 불러오는 중...</p></div>`;
+  try {
+    const response = await fetch(relativeUrl("/api/settings/keys"));
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error);
+    renderSettingsModal(data.fields || []);
+  } catch (error) {
+    modal.innerHTML = `
+      <div class="settings-dialog">
+        <header><h2>API Key 설정</h2><button class="icon-button" type="button" data-close-settings>x</button></header>
+        <div class="error">${escapeHtml(error.message)}</div>
+      </div>
+    `;
+    bindSettingsClose();
+  }
+}
+
+function renderSettingsModal(fields) {
+  const modal = document.querySelector("#apiKeyModal");
+  modal.innerHTML = `
+    <div class="settings-dialog">
+      <header>
+        <div>
+          <h2>API Key 설정</h2>
+          <p>비워 둔 항목은 기존 키를 유지합니다. 저장하면 현재 서버에도 바로 반영됩니다.</p>
+        </div>
+        <button class="icon-button" type="button" data-close-settings>x</button>
+      </header>
+      <form id="apiKeyForm" class="settings-form">
+        ${fields.map((field) => `
+          <label>
+            <span>${escapeHtml(apiKeyLabel(field.name))}</span>
+            <small>${field.configured ? `현재: ${escapeHtml(field.masked)}` : "현재: 미설정"}</small>
+            <input type="password" name="${escapeHtml(field.name)}" autocomplete="off" placeholder="새 키를 입력하면 교체됩니다">
+          </label>
+        `).join("")}
+        <div id="settingsMessage"></div>
+        <div class="settings-actions">
+          <button class="secondary" type="button" data-close-settings>닫기</button>
+          <button class="primary" type="submit">저장</button>
+        </div>
+      </form>
+    </div>
+  `;
+  bindSettingsClose();
+  document.querySelector("#apiKeyForm").addEventListener("submit", saveApiKeys);
+}
+
+async function saveApiKeys(event) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const button = form.querySelector("button[type='submit']");
+  const message = document.querySelector("#settingsMessage");
+  const keys = Object.fromEntries([...new FormData(form).entries()].filter(([, value]) => String(value).trim()));
+  button.disabled = true;
+  button.textContent = "저장 중...";
+  try {
+    const response = await fetch(relativeUrl("/api/settings/keys"), {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ keys })
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error);
+    const statusResponse = await fetch(relativeUrl("/api/providers/status"));
+    state.providerStatus = await statusResponse.json();
+    renderSettingsModal(data.fields || []);
+    document.querySelector("#settingsMessage").innerHTML = `<div class="success">저장했습니다. AI 리스트 상태가 갱신되었습니다.</div>`;
+    render();
+  } catch (error) {
+    message.innerHTML = `<div class="error">${escapeHtml(error.message)}</div>`;
+  } finally {
+    button.disabled = false;
+    button.textContent = "저장";
+  }
 }
 
 function renderIdeaPage() {
@@ -502,6 +706,11 @@ function renderUIUXOutputPage() {
                 <h2>${escapeHtml(output.aiName)}</h2>
                 <p>${escapeHtml(output.summary)}</p>
               </div>
+              ${output.imageUrl ? `<img class="uiux-image-thumb" src="${escapeHtml(output.imageUrl)}" alt="${escapeHtml(output.aiName)} UI / UX 이미지">` : ""}
+              ${output.imageTaskId && !output.imageUrl ? `<div class="media-live-status"><b>${escapeHtml(output.imageTaskStatus || "PENDING")}</b><span>실제 AI 이미지 작업</span></div>` : ""}
+              ${output.imageError ? `<div class="error inline-error">${escapeHtml(output.imageError)}</div>` : ""}
+              ${output.imageTaskId && !output.imageUrl ? `<button class="preview-link" type="button" data-uiux-image-refresh-index="${index}">이미지 상태 확인 →</button>` : ""}
+              ${renderTraceDetails(output)}
               <button class="preview-link" type="button" data-uiux-preview-index="${index}">미리보기 열기 →</button>
             </article>
           `).join("")}
@@ -522,6 +731,12 @@ function renderUIUXOutputPage() {
       state.uiuxMerged = document.querySelector("#uiuxMergedInput").value;
       state.uiuxPreviewIndex = Number(button.dataset.uiuxPreviewIndex);
       state.page = 13;
+      render();
+    });
+  });
+  document.querySelectorAll("[data-uiux-image-refresh-index]").forEach((button) => {
+    button.addEventListener("click", async () => {
+      await refreshUIUXImageTask(Number(button.dataset.uiuxImageRefreshIndex));
       render();
     });
   });
@@ -714,6 +929,7 @@ function renderMediaGalleryPage() {
               <h2>${escapeHtml(output.aiName)}</h2>
               <p>${escapeHtml(output.summary)}</p>
               ${output.taskId ? `<div class="media-live-status"><b>${escapeHtml(output.taskStatus || "PENDING")}</b><span>실제 AI 영상 작업</span></div>` : `<div class="media-live-status preview"><b>PREVIEW</b><span>로컬 모션 프리뷰</span></div>`}
+              ${output.taskError ? `<div class="error inline-error">${escapeHtml(output.taskError)}</div>` : ""}
               ${output.taskId && !output.videoUrl ? `<button class="preview-link" type="button" data-media-refresh-index="${index}">생성 상태 확인 →</button>` : ""}
               ${output.videoUrl ? `<a class="download-link" href="${escapeHtml(output.videoUrl)}" target="_blank" rel="noreferrer">실제 영상 다운로드</a>` : ""}
               <span class="fit">적합도 ${output.fit}%</span>
@@ -960,6 +1176,19 @@ async function refreshMediaTask(index) {
   render();
 }
 
+async function refreshUIUXImageTask(index) {
+  const output = state.uiuxOutputs[index];
+  if (!output?.imageTaskId) return;
+  const response = await fetch(relativeUrl(`/api/media-generation/tasks/${encodeURIComponent(output.imageTaskId)}`));
+  const task = await response.json();
+  if (!response.ok) {
+    output.imageError = task.error || "이미지 상태를 확인하지 못했습니다.";
+    return showError(output.imageError);
+  }
+  output.imageTaskStatus = task.status || "UNKNOWN";
+  output.imageUrl = task.output?.[0] || "";
+}
+
 function renderCompactIndexPreview(output) {
   const preview = output.preview;
   return `
@@ -1005,10 +1234,21 @@ function renderUIUXPreviewPage() {
           ${output.screens.map(renderWireframe).join("")}
         </div>
       </section>
+      ${output.imageUrl ? `<section class="preview-overview"><img class="uiux-generated-image" src="${escapeHtml(output.imageUrl)}" alt="${escapeHtml(output.aiName)} UI / UX 생성 이미지"></section>` : ""}
+      ${output.imageTaskId && !output.imageUrl ? `<div class="action-row"><button class="primary" id="refreshUIUXImageButton" type="button">이미지 상태 확인</button></div>` : ""}
+      ${output.imageError ? `<div class="error">${escapeHtml(output.imageError)}</div>` : ""}
+      ${renderTraceDetails(output)}
       <div class="action-row"><button class="secondary" id="backToUIUXSummaryButton" type="button">UI / UX 요약으로 돌아가기</button></div>
     </section>
   `;
   mountSidebar(6);
+  const refreshImageButton = document.querySelector("#refreshUIUXImageButton");
+  if (refreshImageButton) {
+    refreshImageButton.addEventListener("click", async () => {
+      await refreshUIUXImageTask(state.uiuxPreviewIndex);
+      render();
+    });
+  }
   document.querySelector("#backToUIUXSummaryButton").addEventListener("click", () => {
     state.page = 12;
     render();
@@ -1136,6 +1376,8 @@ function aiCard(ai, index, selectedIds, attribute) {
   const connectionLabel = ai.connection
     ? ai.connection.configured ? "API 키 설정됨" : "API 키 필요"
     : "";
+  const creditLabel = providerApiResourceLabel(ai.provider);
+  const providerEventLabel = providerApiEventStatusLabel(ai.provider);
   return `
     <article class="ai-card ${selected ? "selected" : ""}">
       <span class="rank">${index + 1}</span>
@@ -1143,11 +1385,77 @@ function aiCard(ai, index, selectedIds, attribute) {
         <h3>${escapeHtml(ai.name)}</h3>
         <p>${escapeHtml(ai.description)}</p>
         ${ai.provider || ai.model ? `<div class="ai-meta">${ai.provider ? `<span>${escapeHtml(ai.provider)}</span>` : ""}${ai.model ? `<code>${escapeHtml(ai.model)}</code>` : ""}${connectionLabel ? `<b class="${ai.connection.configured ? "connected" : "needs-key"}">${connectionLabel}</b>` : ""}</div>` : ""}
+        ${creditLabel ? `<div class="credit-meta ${creditLabel.level}">${escapeHtml(creditLabel.text)}</div>` : ""}
+        ${providerEventLabel ? `<div class="provider-event-meta">${escapeHtml(providerEventLabel)}</div>` : ""}
         <span class="fit">적합도 ${ai.fit}%</span>
       </div>
       <button class="select-button" type="button" ${attribute}="${ai.id}">${selected ? "선택됨" : "선택"}</button>
     </article>
   `;
+}
+
+function providerApiEventStatusLabel(provider) {
+  const event = state.providerStatus?.recentEvents?.[provider];
+  if (!event) return "";
+  if (event.status === "live") return `최근 API 응답: LIVE (${event.model || "model unknown"})`;
+  const reason = event.reason ? ` · ${event.reason}` : "";
+  return `최근 API 응답: FALLBACK${reason}`;
+}
+
+function providerApiResourceLabel(provider) {
+  const textQuota = state.providerStatus?.text?.[provider]?.quota;
+  if (textQuota) {
+    if (!textQuota.configured) return { text: "API 쿼터: 키 필요", level: "warn" };
+    if (typeof textQuota.remaining === "number") {
+      return { text: `API 잔액: ${formatNumber(textQuota.remaining)} ${textQuota.unit}`, level: textQuota.remaining > 0 ? "ok" : "danger" };
+    }
+    if (textQuota.status === "quota-error") return { text: "API 쿼터: 초과 (Codex 한도와 별개)", level: "danger" };
+    if (textQuota.status === "lookup-error") return { text: "API 쿼터: 조회 실패", level: "warn" };
+    return { text: "API 쿼터: 잔량 조회 미지원", level: "muted" };
+  }
+
+  const mediaStatus = state.providerStatus?.media?.[provider];
+  if (!mediaStatus) return null;
+  if (!mediaStatus.configured) return { text: "API 크레딧: 키 필요", level: "warn" };
+  if (typeof mediaStatus.creditBalance === "number") {
+    return { text: `API 크레딧: ${formatNumber(mediaStatus.creditBalance)}`, level: mediaStatus.creditBalance > 0 ? "ok" : "danger" };
+  }
+  if (mediaStatus.error) return { text: "API 크레딧: 조회 실패", level: "warn" };
+  return { text: "API 크레딧: 확인 중", level: "muted" };
+}
+
+function providerEventStatusLabel(provider) {
+  const event = state.providerStatus?.recentEvents?.[provider];
+  if (!event) return "";
+  if (event.status === "live") return `최근 응답: LIVE (${event.model || "model unknown"})`;
+  const reason = event.reason ? ` · ${event.reason}` : "";
+  return `최근 응답: FALLBACK${reason}`;
+}
+
+function providerResourceLabel(provider) {
+  const textQuota = state.providerStatus?.text?.[provider]?.quota;
+  if (textQuota) {
+    if (!textQuota.configured) return { text: "잔여 토큰: API 키 필요", level: "warn" };
+    if (typeof textQuota.remaining === "number") {
+      return { text: `잔여 ${textQuota.unit}: ${formatNumber(textQuota.remaining)}`, level: textQuota.remaining > 0 ? "ok" : "danger" };
+    }
+    if (textQuota.status === "quota-error") return { text: "잔여 토큰: 쿼터 초과", level: "danger" };
+    if (textQuota.status === "lookup-error") return { text: "잔여 토큰: 조회 실패", level: "warn" };
+    return { text: "잔여 토큰: 조회 미지원", level: "muted" };
+  }
+
+  const mediaStatus = state.providerStatus?.media?.[provider];
+  if (!mediaStatus) return null;
+  if (!mediaStatus.configured) return { text: "크레딧: API 키 필요", level: "warn" };
+  if (typeof mediaStatus.creditBalance === "number") {
+    return { text: `크레딧 잔액: ${formatNumber(mediaStatus.creditBalance)}`, level: mediaStatus.creditBalance > 0 ? "ok" : "danger" };
+  }
+  if (mediaStatus.error) return { text: "크레딧 잔액: 조회 실패", level: "warn" };
+  return { text: "크레딧 잔액: 확인 중", level: "muted" };
+}
+
+function formatNumber(value) {
+  return new Intl.NumberFormat("ko-KR", { maximumFractionDigits: 2 }).format(value);
 }
 
 function renderOutputGrid(outputs, attribute) {
@@ -1156,10 +1464,41 @@ function renderOutputGrid(outputs, attribute) {
       ${outputs.map((output, index) => `
         <article class="output-card">
           <header><h2>${escapeHtml(output.aiName)}</h2><span class="fit">적합도 ${output.fit}%</span></header>
+          ${renderSourceBadge(output)}
           <textarea ${attribute}="${index}">${escapeHtml(output.content)}</textarea>
         </article>
       `).join("")}
     </div>
+  `;
+}
+
+function renderSourceBadge(output) {
+  if (!output.source && !output.actualModel) return "";
+  const source = output.source === "live" ? "LIVE 응답" : "FALLBACK 응답";
+  const reason = output.fallbackReason ? ` · ${output.fallbackReason}` : "";
+  return `<div class="trace-badge ${output.source === "live" ? "live" : "fallback"}">${escapeHtml(source)} · ${escapeHtml(output.actualModel || "unknown")}${escapeHtml(reason)}</div>`;
+}
+
+function renderTraceDetails(output) {
+  const hasTrace = output.source || output.actualModel || output.fallbackReason || output.promptPreview || output.responsePreview || output.imageTaskId || output.imagePromptPreview;
+  if (!hasTrace) return "";
+  return `
+    <details class="trace-details">
+      <summary>AI 응답 확인</summary>
+      <dl>
+        <dt>텍스트 응답</dt>
+        <dd>${escapeHtml(output.source === "live" ? "선택된 AI에서 받음" : "로컬 fallback 사용")}</dd>
+        <dt>요청 모델</dt>
+        <dd>${escapeHtml(output.provider || "-")} / ${escapeHtml(output.model || "-")}</dd>
+        <dt>실제 모델</dt>
+        <dd>${escapeHtml(output.actualModel || "-")}</dd>
+        ${output.fallbackReason ? `<dt>Fallback 사유</dt><dd>${escapeHtml(output.fallbackReason)}</dd>` : ""}
+        ${output.promptPreview ? `<dt>보낸 프롬프트 일부</dt><dd><pre>${escapeHtml(output.promptPreview)}</pre></dd>` : ""}
+        ${output.responsePreview ? `<dt>받은 응답 일부</dt><dd><pre>${escapeHtml(output.responsePreview)}</pre></dd>` : ""}
+        ${output.imageTaskId ? `<dt>이미지 task</dt><dd>${escapeHtml(output.imageTaskId)} · ${escapeHtml(output.imageTaskStatus || "")}</dd>` : ""}
+        ${output.imagePromptPreview ? `<dt>이미지 프롬프트 일부</dt><dd><pre>${escapeHtml(output.imagePromptPreview)}</pre></dd>` : ""}
+      </dl>
+    </details>
   `;
 }
 

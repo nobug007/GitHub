@@ -1,5 +1,6 @@
 import { generateText } from "./providers/text.js";
 import { createTextAIList, withTextConnections } from "./providers/catalog.js";
+import { isRecoverableRunwayError, startRunwayImage } from "./media-generation.js";
 
 const availableAIs = createTextAIList({
   descriptions: [
@@ -32,6 +33,13 @@ export async function runUIUXDesign({ idea, workflowDefinition, selectedAIIds, u
       const preview = outputFor(ai.fallbackId, idea, workflowDefinition);
       const generated = await generateText({ provider: ai.provider, model: ai.model, prompt, fallback: preview.content, useLiveAI });
       const visual = generated.source === "live" ? livePreviewFor(ai, generated.content, preview) : preview;
+      const imageResult = useLiveAI ? await tryStartUIUXImage({
+        idea,
+        ai,
+        visual,
+        content: generated.content,
+        index
+      }) : { task: null, error: "" };
       return {
         aiId: ai.id,
         aiName: ai.name,
@@ -41,10 +49,52 @@ export async function runUIUXDesign({ idea, workflowDefinition, selectedAIIds, u
         ...visual,
         content: generated.content,
         source: generated.source,
-        actualModel: generated.actualModel
+        actualModel: generated.actualModel,
+        fallbackReason: generated.fallbackReason || "",
+        promptPreview: prompt.slice(0, 700),
+        responsePreview: generated.content.slice(0, 700),
+        imageTaskId: imageResult.task?.id || "",
+        imageTaskStatus: imageResult.task ? "PENDING" : "PREVIEW",
+        imageUrl: "",
+        imageError: imageResult.error,
+        imagePromptPreview: imageResult.promptPreview || ""
       };
     }))
   };
+}
+
+async function tryStartUIUXImage({ idea, ai, visual, content, index }) {
+  const prompt = buildUIUXImagePrompt({ idea, ai, visual, content, index });
+  try {
+    return {
+      task: await startRunwayImage({
+        prompt
+      }),
+      error: "",
+      promptPreview: prompt.slice(0, 700)
+    };
+  } catch (error) {
+    if (isRecoverableRunwayError(error.message)) return { task: null, error: "", promptPreview: prompt.slice(0, 700) };
+    return { task: null, error: error.message, promptPreview: prompt.slice(0, 700) };
+  }
+}
+
+function buildUIUXImagePrompt({ idea, ai, visual, content, index }) {
+  const angles = [
+    "information architecture focused product screen",
+    "state-rich dashboard interface with progress and comparison",
+    "fast MVP validation interface with concise controls"
+  ];
+  const screenNames = visual.screens.map((screen) => screen.title).join(", ");
+  return [
+    `Create one polished 16:9 SaaS product UI mockup for "${idea}".`,
+    `Design direction: ${visual.style}, generated from ${ai.name}.`,
+    `Composition angle: ${angles[index] || "operational product interface"}.`,
+    `Include these screen concepts as visible panels: ${screenNames}.`,
+    `Use a clean Korean startup web app interface, readable layout blocks, left workflow navigation, central editor, AI result comparison cards, merge result panel, and clear CTA buttons.`,
+    `Do not include real company logos. Avoid tiny unreadable text. Make it look like an actual product screenshot, not a marketing hero.`,
+    compact(content).slice(0, 400)
+  ].join(" ");
 }
 
 function livePreviewFor(ai, content, fallback) {

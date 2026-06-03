@@ -9,11 +9,20 @@ const textModels = [
 ];
 
 export function createTextAIList({ fits = [98, 97, 95, 92, 90], descriptions, fallbackIds }) {
+  const fallbackVariants = new Set(fallbackIds).size < fallbackIds.length
+    ? {
+        "openai-gpt-5-2": "openai-gpt-5-4",
+        "google-gemini-2-5-pro": "google-gemini-3-pro",
+        "google-gemini-2-5-flash": "anthropic-claude-opus-4-1",
+        "openrouter-auto": "cohere-command-a-plus",
+        "groq-llama-3-3-70b": "mistral-medium-3-5"
+      }
+    : {};
   return textModels.map((model, index) => ({
     ...model,
     fit: fits[index],
     description: descriptions[index],
-    fallbackId: fallbackIds[index]
+    fallbackId: fallbackVariants[model.id] || fallbackIds[index]
   }));
 }
 
