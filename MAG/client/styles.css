@@ -869,6 +869,11 @@ textarea:focus {
   box-shadow: var(--shadow);
 }
 
+.output-card.selected {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(36, 107, 254, 0.12), var(--shadow);
+}
+
 .output-card header {
   border-bottom: 1px solid var(--line);
   padding: 14px;
@@ -883,6 +888,10 @@ textarea:focus {
   min-height: 300px;
   border: 0;
   border-radius: 0 0 8px 8px;
+}
+
+.output-card .index-select-button {
+  margin: 0 14px 14px;
 }
 
 .merge-panel {
@@ -1204,6 +1213,33 @@ textarea:focus {
   margin: 0 auto;
   padding: 64px 0;
   text-align: center;
+}
+
+.index-generated-image {
+  overflow: hidden;
+  margin: 0 0 24px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  text-align: left;
+}
+
+.index-generated-image img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
+.index-generated-image figcaption {
+  padding: 8px 10px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.index-generated-image.compact {
+  margin-bottom: 14px;
 }
 
 .index-demo-hero h2 {
