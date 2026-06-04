@@ -273,7 +273,7 @@ async function saveApiKeySettings(payload) {
   }
   if (!env.PORT) env.PORT = process.env.PORT || "8787";
   if (!env.AI_PROVIDER_MODE) env.AI_PROVIDER_MODE = process.env.AI_PROVIDER_MODE || "hybrid";
-  await writeEnvSettings(env);
+  await tryWriteEnvSettings(env);
   return { ok: true, ...(await apiKeySettings()) };
 }
 
@@ -301,6 +301,14 @@ async function writeEnvSettings(env) {
     ...ordered.map((name) => `${name}=${env[name] || ""}`)
   ];
   await writeFile(envFilePath, `${lines.join("\n")}\n`, "utf8");
+}
+
+async function tryWriteEnvSettings(env) {
+  try {
+    await writeEnvSettings(env);
+  } catch (error) {
+    if (!["EROFS", "EACCES", "EPERM"].includes(error.code)) throw error;
+  }
 }
 
 function maskSecret(value) {

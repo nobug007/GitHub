@@ -12,6 +12,7 @@ const state = {
   page: 1,
   startedAt: Date.now(),
   plan: "premium",
+  automationProgress: null,
   premiumSkipSteps: [],
   useLiveAI: false,
   providerStatus: null,
@@ -324,25 +325,27 @@ async function saveApiKeys(event) {
 }
 
 function renderIdeaPage() {
-  const isPremium = state.plan === "premium";
+  const canSelectAI = state.plan !== "free";
+  const automationRunning = Boolean(state.automationProgress?.running);
   app.innerHTML = `
     <section class="page intro">
-      <h1>당신의 아이디어를 구체화 해 드립니다.</h1>
-      <p>진행 방식을 선택하고 아이디어를 입력해 주세요. 필요한 검토 수준에 맞춰 AI 제작 흐름을 구성합니다.</p>
+      <h1>당신의 아이디어를 구체화해서 MVP로 만듭니다.</h1>
+      <p>진행 방식을 선택하고 아이디어를 입력해 주세요. 필요한 검증 순서에 맞춰 AI 제작 흐름을 구성합니다.</p>
       ${renderPlanSelector()}
       <div class="idea-box">
-        <label for="ideaInput">아이디어를 입력해 주세요.</label>
-        <textarea class="idea-input" id="ideaInput" placeholder="예: 지역 소상공인과 관광객을 연결하는 AI 큐레이션 서비스를 만들고 싶습니다.">${escapeHtml(state.idea)}</textarea>
+        <label for="ideaInput">아이디어를 입력해 주세요</label>
+        <textarea class="idea-input" id="ideaInput" placeholder="예: 지역 소상공인과 관광객을 연결하는 AI 추천 서비스를 만들고 싶습니다.">${escapeHtml(state.idea)}</textarea>
       </div>
-      ${isPremium ? renderAISelection({
-        title: "문제정의 및 목표 구체화 AI",
+      ${canSelectAI ? renderAISelection({
+        title: "문제 정의 및 목표 구체화 AI",
         list: state.aiList,
         selectedIds: state.selectedAIIds,
         attribute: "data-problem-ai-id",
-        helper: "문제 정의 및 목표 구체화 적합도가 높은 순서입니다. 실행할 AI 서버를 3개 선택해 주세요."
-      }) : `<div class="plan-note">${state.plan === "free" ? "FREE는 입력 후 10단계를 자동으로 진행하여 제안서 다운로드 화면까지 이동합니다." : "STANDARD는 2~4단계, 5~6단계, 7~8단계, 9~10단계를 묶어서 진행합니다. 각 묶음의 마지막 화면에서 결과를 검토할 수 있습니다."}</div>`}
+        helper: "문제 정의와 목표 구체화에 사용할 AI 서버 3개를 선택해 주세요."
+      }) : renderFreePlanNote()}
+      ${renderAutomationProgress()}
       <div id="errorBox"></div>
-      <div class="action-row"><button class="primary large" id="executeButton" type="button">${isPremium ? "실행" : "자동 제작 시작"}</button></div>
+      <div class="action-row"><button class="primary large" id="executeButton" type="button" ${automationRunning ? "disabled" : ""}>${canSelectAI ? "실행" : "자동 제작 시작"}</button></div>
     </section>
   `;
   mountSidebar(1);
@@ -355,15 +358,70 @@ function renderIdeaPage() {
       render();
     });
   });
-  if (isPremium) bindAIButtons("[data-problem-ai-id]", "problem");
+  if (canSelectAI) bindAIButtons("[data-problem-ai-id]", "problem");
   document.querySelector("#executeButton").addEventListener("click", executeSelectedAIs);
+}
+
+function renderFreePlanNote() {
+  const providers = ["1. OpenRouter Auto Router", "2. Google Gemini", "3. OpenAI"];
+  return `
+    <section class="free-ai-note">
+      <strong>FREE 자동 진행 기본 AI</strong>
+      <p>Free 모드는 AI를 직접 선택하지 않고 아래 순서의 AI를 기본으로 사용합니다. 각 단계에 해당 AI가 없으면 사용 가능한 AI로 자동 보완합니다.</p>
+      <div class="free-ai-defaults">
+        ${providers.map((provider) => `<span>${escapeHtml(provider)}</span>`).join("")}
+      </div>
+    </section>
+  `;
+}
+
+function renderAutomationProgress() {
+  if (state.plan !== "free") return "";
+  if (!state.automationProgress) return "";
+  const labels = automationStepLabels();
+  const { currentStep = 0, completedSteps = [], statusText = "자동 제작 준비 중" } = state.automationProgress;
+  return `
+    <section class="automation-progress-panel" aria-live="polite">
+      <div class="automation-progress-header">
+        <strong>FREE 자동 제작 진행</strong>
+        <span>${escapeHtml(statusText)}</span>
+      </div>
+      <ol class="automation-progress-steps">
+        ${labels.map((label, index) => {
+          const step = index + 1;
+          const status = completedSteps.includes(step) ? "done" : step === currentStep ? "active" : "";
+          return `
+            <li class="${status}">
+              <b>${step}</b>
+              <span>${escapeHtml(label)}</span>
+            </li>
+          `;
+        }).join("")}
+      </ol>
+    </section>
+  `;
+}
+
+function automationStepLabels() {
+  return [
+    "문제 정의",
+    "타겟/페르소나",
+    "사용자 시나리오",
+    "핵심 기능",
+    "WorkFlow",
+    "UI/UX",
+    "코드 생성",
+    "영상 생성",
+    "사업성 분석",
+    "제안서 생성"
+  ];
 }
 
 function renderPlanSelector() {
   const plans = [
-    ["free", "FREE", "아이디어 입력 후 결과물까지 자동 완주"],
-    ["standard", "STANDARD", "묶음별 핵심 결과만 검토하고 수정"],
-    ["premium", "PREMIUM", "AI 선택과 수정 단계를 세밀하게 제어"]
+    ["free", "FREE", "아이디어 입력 후 결과물까지 자동 진행"],
+    ["standard", "STANDARD", "각 단계에서 AI를 선택하고 결과를 검토"],
+    ["premium", "PREMIUM", "AI 선택과 자동 진행 단계를 세밀하게 제어"]
   ];
   return `
     <section class="plan-selector" aria-label="제작 플랜 선택">
@@ -581,7 +639,6 @@ function renderFeatureOutputPage() {
 }
 
 function renderFeatureMergedPage() {
-  const isStandard = state.plan === "standard";
   app.innerHTML = `
     <section class="page">
       ${renderHeading("핵심 기능 정의 취합 완료", "Merge 서버가 세 AI의 핵심 기능 정의를 하나로 취합했습니다. 내용을 수정한 뒤 WorkFlow 설계에 사용할 AI 서버 3개를 선택해 주세요.")}
@@ -591,7 +648,7 @@ function renderFeatureMergedPage() {
         <p class="helper">이 내용은 선택한 WorkFlow 설계 AI 서버에 전달됩니다. 필요한 부분을 직접 편집할 수 있습니다.</p>
         <textarea id="featureMergedInput">${escapeHtml(state.featureMerged)}</textarea>
       </section>
-      ${isStandard ? `<div class="plan-note">STANDARD 체크포인트: 핵심 기능을 수정한 뒤 5~6단계 WorkFlow와 UI / UX 구성을 한 번에 진행합니다.</div>` : renderAISelection({
+      ${renderAISelection({
         title: "WorkFlow 설계 AI 서버",
         list: state.workflowAIList,
         selectedIds: state.workflowSelectedAIIds,
@@ -601,7 +658,7 @@ function renderFeatureMergedPage() {
       <div id="errorBox"></div>
       <div class="action-row">
         <button class="secondary" id="backToFeatureOutputsButton" type="button">이전 단계로 돌아가기</button>
-        <button class="primary large" id="${isStandard ? "standardUIUXButton" : "workflowRunButton"}" type="button">${isStandard ? "5~6단계 자동 실행" : "Submit"}</button>
+        <button class="primary large" id="workflowRunButton" type="button">Submit</button>
       </div>
     </section>
   `;
@@ -609,16 +666,13 @@ function renderFeatureMergedPage() {
   document.querySelector("#featureMergedInput").addEventListener("input", (event) => {
     state.featureMerged = event.target.value;
   });
-  if (!isStandard) bindAIButtons("[data-workflow-ai-id]", "workflow");
+  bindAIButtons("[data-workflow-ai-id]", "workflow");
   document.querySelector("#backToFeatureOutputsButton").addEventListener("click", () => {
     state.featureMerged = document.querySelector("#featureMergedInput").value;
     state.page = 8;
     render();
   });
-  document.querySelector(isStandard ? "#standardUIUXButton" : "#workflowRunButton").addEventListener("click", isStandard ? () => {
-    state.featureMerged = document.querySelector("#featureMergedInput").value;
-    runAutomation("standardUIUXButton", "uiux", 5);
-  } : executeWorkflowAIs);
+  document.querySelector("#workflowRunButton").addEventListener("click", executeWorkflowAIs);
 }
 
 function renderWorkflowOutputPage() {
@@ -912,7 +966,6 @@ function renderFinalIndexPage() {
 }
 
 function renderMediaGalleryPage() {
-  const isStandard = state.plan === "standard";
   app.innerHTML = `
     <section class="page">
       ${renderHeading("미래 완성형 MVP 영상 제작 완료", "선택한 AI 엔진이 완성된 서비스의 작동 모습을 상상하여 데모 영상 3개를 구성했습니다. 썸네일을 눌러 약 10초 프리뷰를 확인해 주세요.")}
@@ -938,7 +991,7 @@ function renderMediaGalleryPage() {
           </article>
         `).join("")}
       </div>
-      ${isStandard ? `<div class="plan-note">STANDARD 체크포인트: 최종 영상을 선택한 뒤 9~10단계 사업성 분석과 제안서 초안을 한 번에 생성합니다.</div>` : renderAISelection({
+      ${renderAISelection({
         title: "사업성 분석 AI 서버",
         list: state.businessAIList,
         selectedIds: state.businessSelectedAIIds,
@@ -948,7 +1001,7 @@ function renderMediaGalleryPage() {
       <div id="errorBox"></div>
       <div class="action-row">
         <button class="secondary" id="backToFinalIndexButton" type="button">이전 단계로 돌아가기</button>
-        <button class="primary large" id="${isStandard ? "standardFilesButton" : "businessRunButton"}" type="button">${isStandard ? "9~10단계 자동 실행" : "Submit"}</button>
+        <button class="primary large" id="businessRunButton" type="button">Submit</button>
       </div>
     </section>
   `;
@@ -969,12 +1022,12 @@ function renderMediaGalleryPage() {
   document.querySelectorAll("[data-media-refresh-index]").forEach((button) => {
     button.addEventListener("click", () => refreshMediaTask(Number(button.dataset.mediaRefreshIndex)));
   });
-  if (!isStandard) bindAIButtons("[data-business-ai-id]", "business");
+  bindAIButtons("[data-business-ai-id]", "business");
   document.querySelector("#backToFinalIndexButton").addEventListener("click", () => {
     state.page = 17;
     render();
   });
-  document.querySelector(isStandard ? "#standardFilesButton" : "#businessRunButton").addEventListener("click", isStandard ? () => runAutomation("standardFilesButton", "files", 9) : executeBusinessAIs);
+  document.querySelector("#businessRunButton").addEventListener("click", executeBusinessAIs);
 }
 
 function renderBusinessOutputPage() {
@@ -1310,8 +1363,8 @@ function mountSidebar(activeStep) {
     <button class="ai-connection-toggle ${state.useLiveAI ? "live" : ""}" id="aiConnectionToggle" type="button" aria-pressed="${state.useLiveAI}">
       <span class="ai-connection-dot"></span>
       <span>
-        <strong>${state.useLiveAI ? "실제 AI 연결 ON" : "가상 AI 연결 OFF"}</strong>
-        <small>${state.useLiveAI ? "외부 API를 호출합니다." : "테스트 응답을 사용합니다."}</small>
+        <strong>${state.useLiveAI ? "실제 AI 서버 연결 ON" : "실제 AI 서버 연결 OFF"}</strong>
+        <small>${state.useLiveAI ? "선택한 AI 서버에 직접 요청합니다." : "가상 연결로 시뮬레이션합니다."}</small>
       </span>
     </button>
   `;
@@ -1543,7 +1596,6 @@ function bindOutputEditors(selector, outputs) {
 async function executeSelectedAIs() {
   if (!state.idea.trim()) return showError("아이디어를 입력해 주세요.");
   if (state.plan === "free") return runAutomation("executeButton", "files", 1);
-  if (state.plan === "standard") return runAutomation("executeButton", "feature", 1);
   const premiumAutoTarget = consecutivePremiumAutoTarget(1);
   if (premiumAutoTarget) return runAutomation("executeButton", premiumAutoTarget, 1);
   if (state.selectedAIIds.length !== 3) return showError("AI를 정확히 3개 선택해 주세요.");
@@ -1579,6 +1631,58 @@ function firstThree(list) {
   return list.slice(0, 3).map((ai) => ai.id);
 }
 
+function automatedAIIds(list) {
+  if (state.plan !== "free") return firstThree(list);
+  return freeDefaultAIIds(list);
+}
+
+function freeDefaultAIIds(list) {
+  const preferences = [
+    (ai) => ai.provider === "OpenRouter" || /openrouter/i.test(`${ai.id} ${ai.name} ${ai.model}`),
+    (ai) => ai.provider === "Google" || /gemini/i.test(`${ai.id} ${ai.name} ${ai.model}`),
+    (ai) => ai.provider === "OpenAI" || /openai/i.test(`${ai.id} ${ai.name} ${ai.model}`)
+  ];
+  const selected = [];
+  for (const match of preferences) {
+    const ai = list.find((candidate) => !selected.includes(candidate.id) && match(candidate));
+    if (ai) selected.push(ai.id);
+  }
+  for (const ai of list) {
+    if (selected.length >= 3) break;
+    if (!selected.includes(ai.id)) selected.push(ai.id);
+  }
+  return selected.slice(0, 3);
+}
+
+function setAutomationStep(step, statusText) {
+  if (state.plan !== "free") return Promise.resolve();
+  state.automationProgress = {
+    running: true,
+    currentStep: step,
+    completedSteps: state.automationProgress?.completedSteps || [],
+    statusText
+  };
+  render();
+  return waitForProgressPaint();
+}
+
+function completeAutomationStep(step, statusText) {
+  if (state.plan !== "free") return Promise.resolve();
+  const completedSteps = [...new Set([...(state.automationProgress?.completedSteps || []), step])].sort((a, b) => a - b);
+  state.automationProgress = {
+    running: true,
+    currentStep: Math.min(step + 1, 10),
+    completedSteps,
+    statusText
+  };
+  render();
+  return waitForProgressPaint();
+}
+
+function waitForProgressPaint() {
+  return new Promise((resolve) => window.setTimeout(resolve, 140));
+}
+
 async function postJSON(url, body) {
   const response = await fetch(relativeUrl(url), {
     method: "POST",
@@ -1592,14 +1696,35 @@ async function postJSON(url, body) {
 
 async function runAutomation(buttonId, stopAt, startStage) {
   const button = document.querySelector(`#${buttonId}`);
+  state.automationProgress = state.plan === "free" ? {
+    running: true,
+    currentStep: startStage,
+    completedSteps: [],
+    statusText: "자동 제작을 시작합니다."
+  } : state.automationProgress;
   if (button) {
     button.disabled = true;
     button.textContent = "자동 제작 진행 중...";
   }
   try {
     await runAutomatedPipeline(stopAt, startStage);
+    if (state.plan === "free") {
+      state.automationProgress = {
+        running: false,
+        currentStep: 10,
+        completedSteps: automationStepLabels().map((_, index) => index + 1),
+        statusText: "자동 제작이 완료되었습니다."
+      };
+    }
     render();
   } catch (error) {
+    if (state.plan === "free" && state.automationProgress) {
+      state.automationProgress = {
+        ...state.automationProgress,
+        running: false,
+        statusText: "자동 제작 중 오류가 발생했습니다."
+      };
+    }
     showError(error.message);
     if (button) {
       button.disabled = false;
@@ -1610,60 +1735,75 @@ async function runAutomation(buttonId, stopAt, startStage) {
 
 async function runAutomatedPipeline(stopAt = "files", startStage = 1) {
   if (startStage <= 1) {
-    state.selectedAIIds = firstThree(state.aiList);
+    await setAutomationStep(1, "1단계 문제 정의를 진행합니다.");
+    state.selectedAIIds = automatedAIIds(state.aiList);
     const problem = await postJSON("/api/problem-definition/run", { idea: state.idea, selectedAIIds: state.selectedAIIds, useLiveAI: state.useLiveAI });
     state.outputs = problem.outputs;
     state.merged = (await postJSON("/api/problem-definition/merge", { idea: state.idea, outputs: state.outputs })).merged;
+    await completeAutomationStep(1, "1단계 문제 정의가 완료되었습니다.");
     if (stopAt === "problem") return void (state.page = 3);
   }
   if (startStage <= 2) {
-    state.personaSelectedAIIds = firstThree(state.personaAIList);
+    await setAutomationStep(2, "2단계 타겟/페르소나를 진행합니다.");
+    state.personaSelectedAIIds = automatedAIIds(state.personaAIList);
     const persona = await postJSON("/api/persona/run", { idea: state.idea, problemDefinition: state.merged, selectedAIIds: state.personaSelectedAIIds, useLiveAI: state.useLiveAI });
     state.personaOutputs = persona.outputs;
     state.personaPrompt = persona.prompt;
     state.personaMerged = (await postJSON("/api/persona/merge", { idea: state.idea, problemDefinition: state.merged, outputs: state.personaOutputs })).merged;
+    await completeAutomationStep(2, "2단계 타겟/페르소나가 완료되었습니다.");
     if (stopAt === "persona") return void (state.page = 5);
   }
   if (startStage <= 3) {
-    state.scenarioSelectedAIIds = firstThree(state.scenarioAIList);
+    await setAutomationStep(3, "3단계 사용자 시나리오를 진행합니다.");
+    state.scenarioSelectedAIIds = automatedAIIds(state.scenarioAIList);
     const scenario = await postJSON("/api/scenario/run", { idea: state.idea, personaDefinition: state.personaMerged, selectedAIIds: state.scenarioSelectedAIIds, useLiveAI: state.useLiveAI });
     state.scenarioOutputs = scenario.outputs;
     state.scenarioPrompt = scenario.prompt;
     state.scenarioMerged = (await postJSON("/api/scenario/merge", { idea: state.idea, personaDefinition: state.personaMerged, outputs: state.scenarioOutputs })).merged;
+    await completeAutomationStep(3, "3단계 사용자 시나리오가 완료되었습니다.");
     if (stopAt === "scenario") return void (state.page = 7);
   }
   if (startStage <= 4) {
-    state.featureSelectedAIIds = firstThree(state.featureAIList);
+    await setAutomationStep(4, "4단계 핵심 기능을 정의합니다.");
+    state.featureSelectedAIIds = automatedAIIds(state.featureAIList);
     const feature = await postJSON("/api/features/run", { idea: state.idea, scenarioDefinition: state.scenarioMerged, selectedAIIds: state.featureSelectedAIIds, useLiveAI: state.useLiveAI });
     state.featureOutputs = feature.outputs;
     state.featurePrompt = feature.prompt;
     state.featureMerged = (await postJSON("/api/features/merge", { idea: state.idea, scenarioDefinition: state.scenarioMerged, outputs: state.featureOutputs })).merged;
+    await completeAutomationStep(4, "4단계 핵심 기능 정의가 완료되었습니다.");
     if (stopAt === "feature") return void (state.page = 9);
   }
   if (startStage <= 5) {
-    state.workflowSelectedAIIds = firstThree(state.workflowAIList);
+    await setAutomationStep(5, "5단계 WorkFlow를 설계합니다.");
+    state.workflowSelectedAIIds = automatedAIIds(state.workflowAIList);
     const workflow = await postJSON("/api/workflow-design/run", { idea: state.idea, featureDefinition: state.featureMerged, selectedAIIds: state.workflowSelectedAIIds, useLiveAI: state.useLiveAI });
     state.workflowOutputs = workflow.outputs;
     state.workflowPrompt = workflow.prompt;
     state.workflowMerged = (await postJSON("/api/workflow-design/merge", { idea: state.idea, featureDefinition: state.featureMerged, outputs: state.workflowOutputs })).merged;
+    await completeAutomationStep(5, "5단계 WorkFlow 설계가 완료되었습니다.");
     if (stopAt === "workflow") return void (state.page = 11);
   }
   if (startStage <= 6) {
-    state.uiuxSelectedAIIds = firstThree(state.uiuxAIList);
+    await setAutomationStep(6, "6단계 UI/UX 화면을 구성합니다.");
+    state.uiuxSelectedAIIds = automatedAIIds(state.uiuxAIList);
     const uiux = await postJSON("/api/uiux-design/run", { idea: state.idea, workflowDefinition: state.workflowMerged, selectedAIIds: state.uiuxSelectedAIIds, useLiveAI: state.useLiveAI });
     state.uiuxOutputs = uiux.outputs;
     state.uiuxPrompt = uiux.prompt;
     state.uiuxMerged = (await postJSON("/api/uiux-design/merge", { idea: state.idea, workflowDefinition: state.workflowMerged, outputs: state.uiuxOutputs })).merged;
+    await completeAutomationStep(6, "6단계 UI/UX 화면 구성이 완료되었습니다.");
     if (stopAt === "uiux") return void (state.page = 12);
   }
   if (startStage <= 7) {
-    state.codeSelectedAIIds = firstThree(state.codeAIList);
+    await setAutomationStep(7, "7단계 Index Page 코드를 생성합니다.");
+    state.codeSelectedAIIds = automatedAIIds(state.codeAIList);
     state.indexPageOutputs = (await postJSON("/api/code-generation/index-page", { idea: state.idea, uiuxDefinition: state.uiuxMerged, selectedAIIds: state.codeSelectedAIIds, useLiveAI: state.useLiveAI })).outputs;
     state.finalIndexPageIndex = 0;
+    await completeAutomationStep(7, "7단계 코드 생성이 완료되었습니다.");
     if (stopAt === "code") return void (state.page = 15);
   }
   if (startStage <= 8) {
-    state.mediaSelectedAIIds = firstThree(state.mediaAIList);
+    await setAutomationStep(8, "8단계 이미지 및 영상을 생성합니다.");
+    state.mediaSelectedAIIds = automatedAIIds(state.mediaAIList);
     state.mediaOutputs = (await postJSON("/api/media-generation/run", {
       idea: state.idea,
       indexPage: state.indexPageOutputs[state.finalIndexPageIndex]?.preview,
@@ -1671,10 +1811,12 @@ async function runAutomatedPipeline(stopAt = "files", startStage = 1) {
       useLiveAI: state.useLiveAI
     })).outputs;
     state.finalMediaIndex = 0;
+    await completeAutomationStep(8, "8단계 이미지 및 영상 생성이 완료되었습니다.");
     if (stopAt === "media") return void (state.page = 18);
   }
   if (startStage <= 9) {
-    state.businessSelectedAIIds = firstThree(state.businessAIList);
+    await setAutomationStep(9, "9단계 사업성을 분석합니다.");
+    state.businessSelectedAIIds = automatedAIIds(state.businessAIList);
     const business = await postJSON("/api/business-analysis/run", {
       idea: state.idea,
       indexPage: state.indexPageOutputs[state.finalIndexPageIndex]?.preview,
@@ -1685,9 +1827,11 @@ async function runAutomatedPipeline(stopAt = "files", startStage = 1) {
     state.businessOutputs = business.outputs;
     state.businessPrompt = business.prompt;
     state.businessMerged = (await postJSON("/api/business-analysis/merge", { idea: state.idea, outputs: state.businessOutputs })).merged;
+    await completeAutomationStep(9, "9단계 사업성 분석이 완료되었습니다.");
     if (stopAt === "business") return void (state.page = 21);
   }
-  state.presentationSelectedAIIds = firstThree(state.presentationAIList);
+  await setAutomationStep(10, "10단계 제안서 초안을 생성합니다.");
+  state.presentationSelectedAIIds = automatedAIIds(state.presentationAIList);
   const presentation = await postJSON("/api/presentation-generation/run", {
     idea: state.idea,
     businessReport: state.businessMerged,
@@ -1700,6 +1844,7 @@ async function runAutomatedPipeline(stopAt = "files", startStage = 1) {
   const files = await filesResponse.json();
   if (!filesResponse.ok) throw new Error(files.error);
   state.presentationFiles = files;
+  await completeAutomationStep(10, "10단계 제안서 생성이 완료되었습니다.");
   state.page = 23;
 }
 

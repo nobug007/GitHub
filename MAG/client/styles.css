@@ -242,8 +242,8 @@ button:disabled {
   grid-template-columns: 11px minmax(0, 1fr);
   gap: 9px;
   align-items: center;
-  width: 100%;
-  margin-top: 18px;
+  width: calc(100% - 12px);
+  margin: 10px 6px 0;
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 11px 10px;
@@ -423,6 +423,129 @@ h1 {
   font-size: 14px;
   line-height: 1.6;
   text-align: left;
+}
+
+.free-ai-note {
+  width: min(920px, 100%);
+  margin-top: 34px;
+  border: 1px solid #bfd2fb;
+  border-radius: 8px;
+  padding: 18px;
+  background: var(--blue-soft);
+  color: #345070;
+  text-align: left;
+}
+
+.free-ai-note strong {
+  display: block;
+  color: var(--ink);
+  font-size: 17px;
+}
+
+.free-ai-note p {
+  margin: 8px 0 14px;
+  color: #526982;
+  line-height: 1.55;
+}
+
+.free-ai-defaults {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.free-ai-defaults span {
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: #fff;
+  color: var(--blue);
+  font-weight: 900;
+  font-size: 13px;
+}
+
+.automation-progress-panel {
+  width: min(920px, 100%);
+  margin-top: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 18px;
+  background: #fff;
+  box-shadow: var(--shadow);
+}
+
+.automation-progress-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.automation-progress-header strong {
+  color: var(--ink);
+  font-size: 16px;
+}
+
+.automation-progress-header span {
+  color: var(--blue);
+  font-weight: 800;
+  font-size: 13px;
+}
+
+.automation-progress-steps {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.automation-progress-steps li {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px;
+  background: #f7f9fc;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.automation-progress-steps b {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: #e8edf5;
+  color: var(--muted);
+}
+
+.automation-progress-steps li.active {
+  border-color: var(--blue);
+  background: var(--blue-soft);
+  color: var(--ink);
+}
+
+.automation-progress-steps li.active b {
+  background: var(--blue);
+  color: #fff;
+}
+
+.automation-progress-steps li.done {
+  border-color: #bde6cf;
+  background: #edf8f1;
+  color: #277348;
+}
+
+.automation-progress-steps li.done b {
+  background: #2fb46e;
+  color: #fff;
 }
 
 .idea-box label,
@@ -1698,6 +1821,7 @@ textarea:focus {
 
   .ai-connection-toggle {
     width: 220px;
+    margin: 10px 0 0;
   }
 
   .workflow-sidebar-title {
@@ -1724,6 +1848,15 @@ textarea:focus {
 
   .plan-selector {
     grid-template-columns: 1fr;
+  }
+
+  .automation-progress-steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .automation-progress-header {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .preview-link-grid,

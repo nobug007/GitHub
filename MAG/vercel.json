@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "builds": [
+    { "src": "api/index.js", "use": "@vercel/node" },
+    { "src": "client/**", "use": "@vercel/static" }
+  ],
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/api/index.js" },
+    { "src": "/deliverables/(.*)", "dest": "/api/index.js" },
+    { "src": "/app.js", "dest": "/client/app.js" },
+    { "src": "/styles.css", "dest": "/client/styles.css" },
+    { "src": "/(.*)", "dest": "/client/index.html" }
+  ]
+}
