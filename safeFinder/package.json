@@ -1,0 +1,10 @@
+{
+  "name": "safe-finder-vercel",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vercel dev",
+    "start": "node server/index.js"
+  }
+}

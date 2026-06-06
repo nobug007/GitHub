@@ -1,0 +1,45 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.safefinder.testapp-mergeDebugResources-2:/values/values.xml",
+            "map": [
+                {
+                    "source": "C:\\GitHub\\safeFinder\\android-app\\app\\src\\main\\res\\values\\strings.xml",
+                    "from": {
+                        "startLines": "1",
+                        "startColumns": "4",
+                        "startOffsets": "16",
+                        "endColumns": "52",
+                        "endOffsets": "64"
+                    },
+                    "to": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "52",
+                        "endOffsets": "103"
+                    }
+                },
+                {
+                    "source": "C:\\GitHub\\safeFinder\\android-app\\app\\src\\main\\res\\values\\styles.xml",
+                    "from": {
+                        "startLines": "1",
+                        "startColumns": "4",
+                        "startOffsets": "16",
+                        "endLines": "6",
+                        "endColumns": "12",
+                        "endOffsets": "344"
+                    },
+                    "to": {
+                        "startLines": "3",
+                        "startColumns": "4",
+                        "startOffsets": "108",
+                        "endLines": "8",
+                        "endColumns": "12",
+                        "endOffsets": "436"
+                    }
+                }
+            ]
+        }
+    ]
+}

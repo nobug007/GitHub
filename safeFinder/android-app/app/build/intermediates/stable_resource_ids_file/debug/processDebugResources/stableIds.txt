@@ -1,0 +1,2 @@
+com.safefinder.testapp:style/AppTheme = 0x7f020000
+com.safefinder.testapp:string/app_name = 0x7f010000

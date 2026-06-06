@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SafeFinder Monitor</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #f6f8fa;
+        color: #111827;
+      }
+
+      main {
+        max-width: 860px;
+        margin: 0 auto;
+        padding: 24px;
+      }
+
+      h1 {
+        margin: 0 0 12px;
+        font-size: 28px;
+      }
+
+      .status {
+        margin-bottom: 16px;
+        color: #4b5563;
+      }
+
+      pre {
+        min-height: 360px;
+        overflow: auto;
+        margin: 0;
+        padding: 16px;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        background: #ffffff;
+        font-size: 14px;
+        line-height: 1.45;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>SafeFinder Monitor</h1>
+      <div id="status" class="status">Waiting for data...</div>
+      <pre id="output">No data yet.</pre>
+    </main>
+
+    <script>
+      const statusEl = document.getElementById("status");
+      const outputEl = document.getElementById("output");
+
+      async function refresh() {
+        try {
+          const response = await fetch("/api/readings", { cache: "no-store" });
+          const result = await response.json();
+          const latest = result.data && result.data.latest;
+
+          statusEl.textContent = `Updated: ${result.data.serverTime}`;
+          outputEl.textContent = latest
+            ? JSON.stringify(latest, null, 2)
+            : "No data yet.";
+        } catch (error) {
+          statusEl.textContent = `Error: ${error.message}`;
+        }
+      }
+
+      refresh();
+      setInterval(refresh, 2000);
+    </script>
+  </body>
+</html>
