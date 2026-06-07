@@ -12,5 +12,7 @@ data class ReadingPayload(
     val battery: Int,
     val signal: Int,
     val status: String,
+    val lteStatus: String,
+    val wifiStatus: String,
     val eventType: String
 )

@@ -8,7 +8,6 @@ import android.os.Bundle
 import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.Button
-import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
 import java.util.concurrent.Executors
@@ -17,7 +16,6 @@ class MainActivity : android.app.Activity() {
     private lateinit var collector: DataCollector
     private lateinit var apNameView: TextView
     private lateinit var statusView: TextView
-    private lateinit var serverUrlInput: EditText
     private val executor = Executors.newSingleThreadExecutor()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,7 +37,6 @@ class MainActivity : android.app.Activity() {
     }
 
     private fun buildUi(): LinearLayout {
-        val prefs = getSharedPreferences("safe_finder", MODE_PRIVATE)
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER_HORIZONTAL
@@ -75,13 +72,6 @@ class MainActivity : android.app.Activity() {
         }
         root.addView(stopButton, buttonParams())
 
-        serverUrlInput = EditText(this).apply {
-            hint = "Server URL"
-            setSingleLine(true)
-            setText(prefs.getString("server_url", SafeFinderConfig.DEFAULT_SERVER_URL))
-        }
-        root.addView(serverUrlInput, LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-
         statusView = TextView(this).apply {
             text = "Ready"
             textSize = 16f
@@ -105,7 +95,8 @@ class MainActivity : android.app.Activity() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return
         val permissions = mutableListOf(
             Manifest.permission.ACCESS_FINE_LOCATION,
-            Manifest.permission.ACCESS_COARSE_LOCATION
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.READ_PHONE_STATE
         )
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             permissions.add(Manifest.permission.POST_NOTIFICATIONS)
@@ -126,7 +117,6 @@ class MainActivity : android.app.Activity() {
     }
 
     private fun sendOnce(eventType: String) {
-        saveServerUrl()
         statusView.text = "Sending..."
         executor.execute {
             try {
@@ -143,7 +133,6 @@ class MainActivity : android.app.Activity() {
     }
 
     private fun startAuto() {
-        saveServerUrl()
         val intent = Intent(this, AutoSendService::class.java)
             .putExtra(AutoSendService.EXTRA_SERVER_URL, serverUrl())
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -154,14 +143,7 @@ class MainActivity : android.app.Activity() {
         statusView.text = "Auto started. Sending every 10 minutes."
     }
 
-    private fun serverUrl(): String = serverUrlInput.text.toString().ifBlank { SafeFinderConfig.DEFAULT_SERVER_URL }
-
-    private fun saveServerUrl() {
-        getSharedPreferences("safe_finder", MODE_PRIVATE)
-            .edit()
-            .putString("server_url", serverUrl())
-            .apply()
-    }
+    private fun serverUrl(): String = SafeFinderConfig.DEFAULT_SERVER_URL
 
     companion object {
         private const val REQUEST_PERMISSIONS = 2001

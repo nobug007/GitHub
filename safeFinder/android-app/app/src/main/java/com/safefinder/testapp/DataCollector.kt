@@ -8,6 +8,7 @@ import android.location.Location
 import android.location.LocationManager
 import android.net.wifi.WifiManager
 import android.os.BatteryManager
+import android.telephony.TelephonyManager
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
@@ -37,6 +38,22 @@ class DataCollector(private val context: Context) {
         return if (level >= 0 && scale > 0) (level * 100) / scale else -1
     }
 
+    fun currentLteStatus(): String {
+        return try {
+            val telephonyManager = context.getSystemService(TelephonyManager::class.java)
+            val operator = telephonyManager?.networkOperator.orEmpty()
+            if (operator.length >= 5) {
+                val mcc = operator.take(3)
+                val mnc = operator.drop(3)
+                "MCC=$mcc,MNC=$mnc"
+            } else {
+                "Fail"
+            }
+        } catch (error: SecurityException) {
+            "Fail"
+        }
+    }
+
     @SuppressLint("MissingPermission")
     fun buildPayload(eventType: String): ReadingPayload {
         val location = latestLocation()
@@ -55,6 +72,8 @@ class DataCollector(private val context: Context) {
             battery = currentBattery(),
             signal = currentSignal(),
             status = "NORMAL",
+            lteStatus = currentLteStatus(),
+            wifiStatus = currentApName(),
             eventType = eventType
         )
     }

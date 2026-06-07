@@ -38,6 +38,8 @@ class SafeFinderClient {
             .put("battery", payload.battery)
             .put("signal", payload.signal)
             .put("status", payload.status)
+            .put("lteStatus", payload.lteStatus)
+            .put("wifiStatus", payload.wifiStatus)
             .put("eventType", payload.eventType)
 
         return JSONObject()
