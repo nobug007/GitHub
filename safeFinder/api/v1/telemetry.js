@@ -35,6 +35,28 @@ function isConfigRequest(req) {
 }
 
 function applyConfigUpdate(body) {
+  if (body.kind === "registration") {
+    const familyId = body.familyId || `FM-${Date.now()}`;
+    upsertFamily({
+      familyId,
+      name: body.familyName,
+      relation: body.relation,
+      phoneNo: body.phoneNo,
+      priority: body.priority,
+      notificationEnabled: body.notificationEnabled
+    });
+    upsertSafeZone({
+      safeZoneId: body.safeZoneId,
+      type: body.type,
+      name: body.safeZoneName,
+      familyId,
+      latitude: body.latitude,
+      longitude: body.longitude,
+      radius: body.radius
+    });
+    return true;
+  }
+
   if (body.kind === "safeZone") {
     if (body.operation === "DELETE") {
       deleteSafeZone(body.safeZoneId);

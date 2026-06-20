@@ -13,6 +13,7 @@
       input, select, button { min-height: 38px; box-sizing: border-box; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; background: #fff; font-size: 14px; }
       button { cursor: pointer; background: #111827; color: #fff; }
       .status { margin-bottom: 16px; color: #4b5563; }
+      .wide { grid-column: 1 / -1; }
       pre { min-height: 220px; overflow: auto; margin: 0; padding: 16px; border: 1px solid #d1d5db; border-radius: 8px; background: #fff; font-size: 14px; line-height: 1.45; white-space: pre-wrap; word-break: break-word; }
     </style>
   </head>
@@ -21,27 +22,24 @@
       <h1>SafeFinder Server</h1>
       <div id="status" class="status">Waiting for data...</div>
 
-      <h2>SafeZone Register</h2>
-      <form id="safeZoneForm">
-        <input name="safeZoneId" placeholder="SZ-001" required>
+      <h2>SafeZone + Family Register</h2>
+      <form id="registrationForm">
+        <input name="safeZoneId" placeholder="SafeZone ID: SZ-001" required>
         <select name="type">
           <option value="wifi">wifi</option>
           <option value="bt">bt</option>
           <option value="gps">gps</option>
         </select>
-        <input name="name" placeholder="WiFi AP Name" required>
-        <input name="familyId" placeholder="FM-001">
-        <button type="submit">Save SafeZone</button>
-      </form>
-
-      <h2>Family Register</h2>
-      <form id="familyForm">
-        <input name="familyId" placeholder="FM-001" required>
-        <input name="name" placeholder="Family Name" required>
-        <input name="relation" placeholder="SON" value="SON">
+        <input name="safeZoneName" placeholder="WiFi AP Name" required>
+        <input name="familyId" placeholder="Family ID: FM-001" required>
+        <input name="familyName" placeholder="Family Name" required>
+        <input name="relation" placeholder="Relation: SON" value="SON">
         <input name="phoneNo" placeholder="010-0000-0000" required>
         <input name="priority" type="number" min="1" value="1">
-        <button type="submit">Save Family</button>
+        <input name="latitude" placeholder="GPS latitude">
+        <input name="longitude" placeholder="GPS longitude">
+        <input name="radius" placeholder="GPS radius">
+        <button class="wide" type="submit">Save SafeZone + Family</button>
       </form>
 
       <h2>Server Config</h2>
@@ -56,10 +54,11 @@
       const configOutputEl = document.getElementById("configOutput");
       const outputEl = document.getElementById("output");
 
-      async function saveConfig(kind, form) {
+      async function saveRegistration(form) {
         const body = Object.fromEntries(new FormData(form).entries());
-        body.kind = kind;
+        body.kind = "registration";
         body.priority = Number(body.priority || 1);
+        body.notificationEnabled = true;
         const response = await fetch("/api/v1/telemetry", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -89,16 +88,9 @@
         }
       }
 
-      document.getElementById("safeZoneForm").addEventListener("submit", event => {
+      document.getElementById("registrationForm").addEventListener("submit", event => {
         event.preventDefault();
-        saveConfig("safeZone", event.currentTarget).catch(error => {
-          statusEl.textContent = `Error: ${error.message}`;
-        });
-      });
-
-      document.getElementById("familyForm").addEventListener("submit", event => {
-        event.preventDefault();
-        saveConfig("family", event.currentTarget).catch(error => {
+        saveRegistration(event.currentTarget).catch(error => {
           statusEl.textContent = `Error: ${error.message}`;
         });
       });
