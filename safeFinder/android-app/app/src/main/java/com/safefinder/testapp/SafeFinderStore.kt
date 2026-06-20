@@ -14,6 +14,7 @@ data class SafeZoneInfo(
 data class FamilyInfo(
     val familyId: String,
     val name: String,
+    val relation: String,
     val phoneNo: String,
     val notificationEnabled: Boolean
 )
@@ -55,6 +56,7 @@ class SafeFinderStore(context: Context) {
             FamilyInfo(
                 familyId = id,
                 name = item.optString("name", id),
+                relation = item.optString("relation"),
                 phoneNo = phoneNo,
                 notificationEnabled = item.optBoolean("notificationEnabled", true)
             )
@@ -68,10 +70,6 @@ class SafeFinderStore(context: Context) {
     fun matchingWifiZone(apName: String?): SafeZoneInfo? {
         if (apName.isNullOrBlank()) return null
         return registeredWifiZones().firstOrNull { it.name.equals(apName, ignoreCase = true) }
-    }
-
-    fun hasAnyRegistration(): Boolean {
-        return safeZones().isNotEmpty() && families().isNotEmpty()
     }
 
     fun situationText(currentApName: String): String {
@@ -88,6 +86,31 @@ class SafeFinderStore(context: Context) {
             val zoneNames = zones.joinToString(", ") { it.name }
             "현재 상황: SafeZone 밖입니다. 등록 SafeZone: $zoneNames / 가족 ${families.size}명."
         }
+    }
+
+    fun registrationText(): String {
+        val zones = safeZones()
+        val families = families()
+        val builder = StringBuilder()
+        builder.appendLine("SafeZone (${zones.size})")
+        if (zones.isEmpty()) {
+            builder.appendLine("- 등록 없음")
+        } else {
+            zones.forEach {
+                builder.appendLine("- ${it.safeZoneId} / ${it.type} / ${it.name}")
+            }
+        }
+
+        builder.appendLine()
+        builder.appendLine("Family (${families.size})")
+        if (families.isEmpty()) {
+            builder.appendLine("- 등록 없음")
+        } else {
+            families.forEach {
+                builder.appendLine("- ${it.familyId} / ${it.name} / ${it.relation} / ${it.phoneNo}")
+            }
+        }
+        return builder.toString().trim()
     }
 
     private fun saveMergedArray(key: String, updates: JSONArray, idField: String) {

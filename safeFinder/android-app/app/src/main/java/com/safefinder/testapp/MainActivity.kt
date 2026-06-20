@@ -9,6 +9,7 @@ import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.LinearLayout
+import android.widget.ScrollView
 import android.widget.TextView
 import java.util.concurrent.Executors
 
@@ -17,6 +18,7 @@ class MainActivity : android.app.Activity() {
     private lateinit var apNameView: TextView
     private lateinit var statusView: TextView
     private lateinit var situationView: TextView
+    private lateinit var registrationView: TextView
     private val executor = Executors.newSingleThreadExecutor()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,14 +39,14 @@ class MainActivity : android.app.Activity() {
         super.onDestroy()
     }
 
-    private fun buildUi(): LinearLayout {
+    private fun buildUi(): ScrollView {
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER_HORIZONTAL
             setPadding(32, 48, 32, 32)
-            layoutParams = LinearLayout.LayoutParams(
+            layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT
+                ViewGroup.LayoutParams.WRAP_CONTENT
             )
         }
 
@@ -69,7 +71,10 @@ class MainActivity : android.app.Activity() {
 
         val stopButton = Button(this).apply {
             text = "Stop Auto"
-            setOnClickListener { stopService(Intent(this@MainActivity, AutoSendService::class.java)); statusView.text = "Auto stopped" }
+            setOnClickListener {
+                stopService(Intent(this@MainActivity, AutoSendService::class.java))
+                statusView.text = "Auto stopped"
+            }
         }
         root.addView(stopButton, buttonParams())
 
@@ -88,7 +93,18 @@ class MainActivity : android.app.Activity() {
             setTextColor(0xFF374151.toInt())
         }
         root.addView(situationView, LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-        return root
+
+        registrationView = TextView(this).apply {
+            text = "SafeZone (0)\n- 등록 없음\n\nFamily (0)\n- 등록 없음"
+            textSize = 15f
+            setPadding(0, 24, 0, 0)
+            setTextColor(0xFF111827.toInt())
+        }
+        root.addView(registrationView, LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+
+        return ScrollView(this).apply {
+            addView(root)
+        }
     }
 
     private fun buttonParams(): LinearLayout.LayoutParams {
@@ -124,9 +140,11 @@ class MainActivity : android.app.Activity() {
 
     private fun refreshApName() {
         val apName = collector.currentApName()
+        val store = SafeFinderStore(applicationContext)
         apNameView.text = apName
         if (::situationView.isInitialized) {
-            situationView.text = SafeFinderStore(applicationContext).situationText(apName)
+            situationView.text = store.situationText(apName)
+            registrationView.text = store.registrationText()
         }
     }
 

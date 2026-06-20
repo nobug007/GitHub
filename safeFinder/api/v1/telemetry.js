@@ -1,4 +1,12 @@
-import { nowKst, syncResponse } from "./config-store.js";
+import {
+  deleteFamily,
+  deleteSafeZone,
+  getConfig,
+  nowKst,
+  syncResponse,
+  upsertFamily,
+  upsertSafeZone
+} from "./config-store.js";
 
 const seenSeq = globalThis.safeFinderTelemetrySeenSeq || new Set();
 globalThis.safeFinderTelemetrySeenSeq = seenSeq;
@@ -20,8 +28,41 @@ function validateReading(reading) {
   return null;
 }
 
+function isConfigRequest(req) {
+  if (req.query?.config === "1") return true;
+  const url = new URL(req.url || "/api/v1/telemetry", "http://localhost");
+  return url.searchParams.get("config") === "1";
+}
+
+function applyConfigUpdate(body) {
+  if (body.kind === "safeZone") {
+    if (body.operation === "DELETE") {
+      deleteSafeZone(body.safeZoneId);
+    } else {
+      upsertSafeZone(body);
+    }
+    return true;
+  }
+
+  if (body.kind === "family") {
+    if (body.operation === "DELETE") {
+      deleteFamily(body.familyId);
+    } else {
+      upsertFamily(body);
+    }
+    return true;
+  }
+
+  return false;
+}
+
 export default function handler(req, res) {
   if (req.method === "GET") {
+    if (isConfigRequest(req)) {
+      res.status(200).json({ success: true, data: getConfig() });
+      return;
+    }
+
     res.status(200).json({
       success: true,
       data: {
@@ -40,6 +81,11 @@ export default function handler(req, res) {
 
   try {
     const payload = parsePayload(req.body);
+    if (applyConfigUpdate(payload)) {
+      res.status(200).json(syncResponse());
+      return;
+    }
+
     const readings = Array.isArray(payload?.readings) ? payload.readings : [];
     let accepted = 0;
     let duplicated = 0;
