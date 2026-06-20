@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>SafeFinder Monitor</title>
+    <title>SafeFinder Server</title>
     <style>
       body {
         margin: 0;
@@ -13,14 +13,42 @@
       }
 
       main {
-        max-width: 860px;
+        max-width: 960px;
         margin: 0 auto;
         padding: 24px;
       }
 
       h1 {
-        margin: 0 0 12px;
+        margin: 0 0 16px;
         font-size: 28px;
+      }
+
+      h2 {
+        margin: 28px 0 12px;
+        font-size: 18px;
+      }
+
+      form {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+
+      input, select, button {
+        min-height: 38px;
+        box-sizing: border-box;
+        padding: 8px 10px;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        background: #fff;
+        font-size: 14px;
+      }
+
+      button {
+        cursor: pointer;
+        background: #111827;
+        color: #fff;
       }
 
       .status {
@@ -29,7 +57,7 @@
       }
 
       pre {
-        min-height: 360px;
+        min-height: 220px;
         overflow: auto;
         margin: 0;
         padding: 16px;
@@ -45,29 +73,90 @@
   </head>
   <body>
     <main>
-      <h1>SafeFinder Monitor</h1>
+      <h1>SafeFinder Server</h1>
       <div id="status" class="status">Waiting for data...</div>
+
+      <h2>SafeZone 등록</h2>
+      <form id="safeZoneForm">
+        <input name="safeZoneId" placeholder="SZ-001" required>
+        <select name="type">
+          <option value="wifi">wifi</option>
+          <option value="bt">bt</option>
+          <option value="gps">gps</option>
+        </select>
+        <input name="name" placeholder="AP Name 또는 Zone 이름" required>
+        <input name="familyId" placeholder="FM-001">
+        <button type="submit">Save SafeZone</button>
+      </form>
+
+      <h2>가족 등록</h2>
+      <form id="familyForm">
+        <input name="familyId" placeholder="FM-001" required>
+        <input name="name" placeholder="홍길동" required>
+        <input name="relation" placeholder="SON" value="SON">
+        <input name="phoneNo" placeholder="010-0000-0000" required>
+        <input name="priority" type="number" min="1" value="1">
+        <button type="submit">Save Family</button>
+      </form>
+
+      <h2>현재 서버 등록 정보</h2>
+      <pre id="configOutput">Loading...</pre>
+
+      <h2>최근 수신 데이터</h2>
       <pre id="output">No data yet.</pre>
     </main>
 
     <script>
       const statusEl = document.getElementById("status");
+      const configOutputEl = document.getElementById("configOutput");
       const outputEl = document.getElementById("output");
+
+      async function saveConfig(kind, form) {
+        const body = Object.fromEntries(new FormData(form).entries());
+        body.kind = kind;
+        body.priority = Number(body.priority || 1);
+        const response = await fetch("/api/v1/config", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "Save failed");
+        form.reset();
+        await refresh();
+      }
 
       async function refresh() {
         try {
-          const response = await fetch("/api/readings", { cache: "no-store" });
-          const result = await response.json();
-          const latest = result.data && result.data.latest;
+          const [configResponse, telemetryResponse] = await Promise.all([
+            fetch("/api/v1/config", { cache: "no-store" }),
+            fetch("/api/v1/telemetry", { cache: "no-store" })
+          ]);
+          const config = await configResponse.json();
+          const telemetry = await telemetryResponse.json();
+          const latest = telemetry.data && telemetry.data.latest;
 
-          statusEl.textContent = `Updated: ${result.data.serverTime}`;
-          outputEl.textContent = latest
-            ? JSON.stringify(latest, null, 2)
-            : "No data yet.";
+          statusEl.textContent = `Updated: ${new Date().toLocaleString()}`;
+          configOutputEl.textContent = JSON.stringify(config.data, null, 2);
+          outputEl.textContent = latest ? JSON.stringify(latest, null, 2) : "No data yet.";
         } catch (error) {
           statusEl.textContent = `Error: ${error.message}`;
         }
       }
+
+      document.getElementById("safeZoneForm").addEventListener("submit", event => {
+        event.preventDefault();
+        saveConfig("safeZone", event.currentTarget).catch(error => {
+          statusEl.textContent = `Error: ${error.message}`;
+        });
+      });
+
+      document.getElementById("familyForm").addEventListener("submit", event => {
+        event.preventDefault();
+        saveConfig("family", event.currentTarget).catch(error => {
+          statusEl.textContent = `Error: ${error.message}`;
+        });
+      });
 
       refresh();
       setInterval(refresh, 2000);

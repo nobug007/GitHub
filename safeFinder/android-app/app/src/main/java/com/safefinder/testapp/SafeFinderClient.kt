@@ -32,15 +32,24 @@ class SafeFinderClient {
         val reading = JSONObject()
             .put("seq", payload.seq)
             .put("timestamp", payload.timestamp)
-            .put("lat", payload.lat)
-            .put("lng", payload.lng)
-            .put("accuracy", payload.accuracy)
+            .put("locationType", payload.locationType)
+
+        if (payload.locationType == "WIFI") {
+            reading.put("apName", payload.apName)
+            reading.put("safeZoneId", payload.safeZoneId)
+        } else {
+            reading.put("lat", payload.lat)
+            reading.put("lng", payload.lng)
+            reading.put("accuracy", payload.accuracy)
+        }
+        reading
+            .put("inSafeZone", payload.inSafeZone)
             .put("battery", payload.battery)
             .put("signal", payload.signal)
-            .put("status", payload.status)
+            .put("deviceStatus", payload.deviceStatus)
+            .put("eventType", payload.eventType)
             .put("lteStatus", payload.lteStatus)
             .put("wifiStatus", payload.wifiStatus)
-            .put("eventType", payload.eventType)
 
         return JSONObject()
             .put("deviceId", payload.deviceId)

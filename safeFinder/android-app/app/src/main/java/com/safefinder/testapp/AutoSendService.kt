@@ -23,8 +23,11 @@ class AutoSendService : Service() {
             executor.execute {
                 try {
                     val payload = collector.buildPayload("PERIODIC")
-                    SafeFinderClient().send(serverUrl, payload)
+                    val response = SafeFinderClient().send(serverUrl, payload)
+                    SafeFinderStore(applicationContext).applyServerResponse(response)
+                    val smsCount = SmsAlertManager(applicationContext).sendWifiExitWarningIfNeeded(collector.currentApName())
                     Log.i(TAG, "Auto payload sent: seq=${payload.seq}")
+                    if (smsCount > 0) Log.i(TAG, "Warning SMS sent to $smsCount family")
                 } catch (error: Exception) {
                     Log.e(TAG, "Auto payload send failed", error)
                 }

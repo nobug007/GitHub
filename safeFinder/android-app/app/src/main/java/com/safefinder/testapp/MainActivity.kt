@@ -16,6 +16,7 @@ class MainActivity : android.app.Activity() {
     private lateinit var collector: DataCollector
     private lateinit var apNameView: TextView
     private lateinit var statusView: TextView
+    private lateinit var situationView: TextView
     private val executor = Executors.newSingleThreadExecutor()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -79,6 +80,14 @@ class MainActivity : android.app.Activity() {
             setTextColor(0xFF374151.toInt())
         }
         root.addView(statusView, LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+
+        situationView = TextView(this).apply {
+            text = "Safe Zone / 가족이 등록되지 않았습니다."
+            textSize = 16f
+            setPadding(0, 16, 0, 0)
+            setTextColor(0xFF374151.toInt())
+        }
+        root.addView(situationView, LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
         return root
     }
 
@@ -96,7 +105,8 @@ class MainActivity : android.app.Activity() {
         val permissions = mutableListOf(
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION,
-            Manifest.permission.READ_PHONE_STATE
+            Manifest.permission.READ_PHONE_STATE,
+            Manifest.permission.SEND_SMS
         )
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             permissions.add(Manifest.permission.POST_NOTIFICATIONS)
@@ -113,7 +123,11 @@ class MainActivity : android.app.Activity() {
     }
 
     private fun refreshApName() {
-        apNameView.text = collector.currentApName()
+        val apName = collector.currentApName()
+        apNameView.text = apName
+        if (::situationView.isInitialized) {
+            situationView.text = SafeFinderStore(applicationContext).situationText(apName)
+        }
     }
 
     private fun sendOnce(eventType: String) {
@@ -122,9 +136,15 @@ class MainActivity : android.app.Activity() {
             try {
                 val payload = collector.buildPayload(eventType)
                 val response = SafeFinderClient().send(serverUrl(), payload)
+                SafeFinderStore(applicationContext).applyServerResponse(response)
+                val smsCount = SmsAlertManager(applicationContext).sendWifiExitWarningIfNeeded(collector.currentApName())
                 runOnUiThread {
                     refreshApName()
-                    statusView.text = "Sent seq ${payload.seq}: $response"
+                    statusView.text = if (smsCount > 0) {
+                        "Sent seq ${payload.seq}. Warning SMS sent to $smsCount family."
+                    } else {
+                        "Sent seq ${payload.seq}. Server sync saved."
+                    }
                 }
             } catch (error: Exception) {
                 runOnUiThread { statusView.text = "Send failed: ${error.message}" }

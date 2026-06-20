@@ -57,6 +57,9 @@ class DataCollector(private val context: Context) {
     @SuppressLint("MissingPermission")
     fun buildPayload(eventType: String): ReadingPayload {
         val location = latestLocation()
+        val apName = currentApName().takeIf { it.isKnownApName() }
+        val locationType = if (apName != null) "WIFI" else "GPS"
+        val safeZone = SafeFinderStore(context).matchingWifiZone(apName)
         val now = nowText()
         val seq = prefs.getLong("seq", 10481L) + 1L
         prefs.edit().putLong("seq", seq).apply()
@@ -66,14 +69,18 @@ class DataCollector(private val context: Context) {
             sentAt = now,
             seq = seq,
             timestamp = now,
-            lat = location?.latitude,
-            lng = location?.longitude,
-            accuracy = location?.accuracy,
+            locationType = locationType,
+            apName = apName,
+            lat = if (locationType == "GPS") location?.latitude else null,
+            lng = if (locationType == "GPS") location?.longitude else null,
+            accuracy = if (locationType == "GPS") location?.accuracy else null,
+            inSafeZone = safeZone != null,
+            safeZoneId = safeZone?.safeZoneId,
             battery = currentBattery(),
             signal = currentSignal(),
-            status = "NORMAL",
+            deviceStatus = if (locationType == "GPS" && location == null) "GPS_WEAK" else "NORMAL",
             lteStatus = currentLteStatus(),
-            wifiStatus = currentApName(),
+            wifiStatus = apName ?: "Fail",
             eventType = eventType
         )
     }
@@ -89,5 +96,9 @@ class DataCollector(private val context: Context) {
 
     private fun nowText(): String {
         return OffsetDateTime.now(ZoneOffset.ofHours(9)).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+    }
+
+    private fun String.isKnownApName(): Boolean {
+        return this != "WiFi not connected" && this != "WiFi connected: unknown SSID"
     }
 }

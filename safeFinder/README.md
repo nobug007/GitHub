@@ -48,11 +48,11 @@ Endpoints:
 ```text
 GET  https://YOUR-VERCEL-PROJECT.vercel.app/
 GET  https://YOUR-VERCEL-PROJECT.vercel.app/api/health
-GET  https://YOUR-VERCEL-PROJECT.vercel.app/api/readings
-POST https://YOUR-VERCEL-PROJECT.vercel.app/api/readings
+GET  https://YOUR-VERCEL-PROJECT.vercel.app/api/v1/telemetry
+POST https://YOUR-VERCEL-PROJECT.vercel.app/api/v1/telemetry
 ```
 
-Open the root page in a browser and keep it open. It refreshes every 2 seconds and displays the latest payload received from the phone.
+Open the root page in a browser and keep it open. It refreshes every 2 seconds and displays the latest telemetry payload received from the phone.
 
 The Vercel function responds with:
 
