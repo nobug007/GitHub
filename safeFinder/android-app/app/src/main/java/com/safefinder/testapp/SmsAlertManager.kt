@@ -19,7 +19,6 @@ class SmsAlertManager(private val context: Context) {
         if (!canSendNow(apName)) return 0
 
         val zoneNames = wifiZones.joinToString(", ") { it.name }
-        val message = " SafeZone 인 , $zoneNames 에서 벗어나 있습니다."
         val smsManager = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             context.getSystemService(SmsManager::class.java)
         } else {
@@ -29,6 +28,7 @@ class SmsAlertManager(private val context: Context) {
 
         var sent = 0
         for (family in families) {
+            val message = "${family.name}님, SafeZone 인 , $zoneNames 에서 벗어나 있습니다."
             val parts = smsManager.divideMessage(message)
             smsManager.sendMultipartTextMessage(family.phoneNo, null, parts, null, null)
             sent += 1

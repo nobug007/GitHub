@@ -25,10 +25,8 @@ class SafeFinderStore(context: Context) {
     fun applyServerResponse(responseBody: String) {
         val root = JSONObject(responseBody)
         val data = root.optJSONObject("data") ?: return
-        val safeZones = data.optJSONArray("safeZones") ?: JSONArray()
-        val families = data.optJSONArray("families") ?: JSONArray()
-        saveMergedArray(KEY_SAFE_ZONES, safeZones, "safeZoneId")
-        saveMergedArray(KEY_FAMILIES, families, "familyId")
+        data.optJSONArray("safeZones")?.let { saveMergedArray(KEY_SAFE_ZONES, it, "safeZoneId") }
+        data.optJSONArray("families")?.let { saveMergedArray(KEY_FAMILIES, it, "familyId") }
         prefs.edit()
             .putLong(KEY_LAST_SYNC_AT, System.currentTimeMillis())
             .putInt(KEY_INTERVAL, root.optInt("interval", SafeFinderConfig.AUTO_INTERVAL_MS.toInt()))
@@ -114,10 +112,7 @@ class SafeFinderStore(context: Context) {
     }
 
     private fun saveMergedArray(key: String, updates: JSONArray, idField: String) {
-        if (updates.length() == 0) {
-            prefs.edit().putString(key, "[]").apply()
-            return
-        }
+        if (updates.length() == 0) return
 
         val current = linkedMapOf<String, JSONObject>()
         for (item in storedArray(key).toObjectList()) {

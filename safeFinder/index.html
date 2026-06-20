@@ -47,14 +47,11 @@
       <h2>Server Config</h2>
       <pre id="configOutput">Loading...</pre>
 
-      <h2>Latest Telemetry</h2>
-      <pre id="output">No data yet.</pre>
     </main>
 
     <script>
       const statusEl = document.getElementById("status");
       const configOutputEl = document.getElementById("configOutput");
-      const outputEl = document.getElementById("output");
 
       async function saveConfig(kind, form) {
         const body = Object.fromEntries(new FormData(form).entries());
@@ -73,17 +70,11 @@
 
       async function refresh() {
         try {
-          const [configResponse, telemetryResponse] = await Promise.all([
-            fetch("/api/v1/telemetry?config=1", { cache: "no-store" }),
-            fetch("/api/v1/telemetry", { cache: "no-store" })
-          ]);
+          const configResponse = await fetch("/api/v1/telemetry?config=1", { cache: "no-store" });
           const config = await configResponse.json();
-          const telemetry = await telemetryResponse.json();
-          const latest = telemetry.data && telemetry.data.latest;
 
           statusEl.textContent = `Updated: ${new Date().toLocaleString()}`;
           configOutputEl.textContent = JSON.stringify(config, null, 2);
-          outputEl.textContent = latest ? JSON.stringify(latest, null, 2) : "No data yet.";
         } catch (error) {
           statusEl.textContent = `Error: ${error.message}`;
         }
@@ -104,7 +95,6 @@
       });
 
       refresh();
-      setInterval(refresh, 2000);
     </script>
   </body>
 </html>
