@@ -81,7 +81,7 @@ function applyConfigUpdate(body) {
 export default function handler(req, res) {
   if (req.method === "GET") {
     if (isConfigRequest(req)) {
-      res.status(200).json({ success: true, data: getConfig() });
+      res.status(200).json(syncResponse());
       return;
     }
 
