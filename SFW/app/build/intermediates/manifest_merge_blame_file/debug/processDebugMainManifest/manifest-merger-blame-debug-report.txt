@@ -1,0 +1,85 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="com.sf.sfw"
+4    android:versionCode="1"
+5    android:versionName="1.0" >
+6
+7    <uses-sdk
+8        android:minSdkVersion="30"
+9        android:targetSdkVersion="35" />
+10
+11    <uses-permission
+11-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:3:5-95
+12        android:name="android.permission.BLUETOOTH"
+12-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:3:22-65
+13        android:maxSdkVersion="30" />
+13-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:3:66-92
+14    <uses-permission
+14-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:4:5-101
+15        android:name="android.permission.BLUETOOTH_ADMIN"
+15-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:4:22-71
+16        android:maxSdkVersion="30" />
+16-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:4:72-98
+17    <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
+17-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:5:5-78
+17-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:5:22-75
+18    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+18-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:6:5-76
+18-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:6:22-73
+19    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+19-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:7:5-79
+19-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:7:22-76
+20    <uses-permission android:name="android.permission.INTERNET" />
+20-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:8:5-67
+20-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:8:22-64
+21
+22    <uses-feature
+22-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:10:5-88
+23        android:name="android.hardware.type.watch"
+23-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:10:19-61
+24        android:required="true" />
+24-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:10:62-85
+25    <uses-feature
+25-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:11:5-90
+26        android:name="android.hardware.bluetooth_le"
+26-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:11:19-63
+27        android:required="true" />
+27-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:11:64-87
+28
+29    <application
+29-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:13:5-27:19
+30        android:allowBackup="false"
+30-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:14:9-36
+31        android:debuggable="true"
+32        android:extractNativeLibs="false"
+33        android:label="@string/app_name"
+33-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:15:9-41
+34        android:theme="@style/AppTheme" >
+34-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:16:9-40
+35        <uses-library
+35-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:17:9-93
+36            android:name="com.google.android.wearable"
+36-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:17:23-65
+37            android:required="false" />
+37-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:17:66-90
+38
+39        <activity
+39-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:19:9-26:20
+40            android:name="com.sf.sfw.MainActivity"
+40-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:20:13-41
+41            android:exported="true" >
+41-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:21:13-36
+42            <intent-filter>
+42-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:22:13-25:29
+43                <action android:name="android.intent.action.MAIN" />
+43-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:23:17-69
+43-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:23:25-66
+44
+45                <category android:name="android.intent.category.LAUNCHER" />
+45-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:24:17-77
+45-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:24:27-74
+46            </intent-filter>
+47        </activity>
+48    </application>
+49
+50</manifest>

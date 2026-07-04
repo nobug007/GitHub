@@ -1,0 +1,6 @@
+int drawable ic_gps_moving 0x7f010000
+int drawable ic_home_zone 0x7f010001
+int drawable ic_safe_finder 0x7f010002
+int drawable ic_sos_status 0x7f010003
+int string app_name 0x7f020000
+int style AppTheme 0x7f030000

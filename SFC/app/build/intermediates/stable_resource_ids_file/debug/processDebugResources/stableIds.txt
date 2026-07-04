@@ -1,0 +1,6 @@
+com.sf.sfc:style/AppTheme = 0x7f030000
+com.sf.sfc:string/app_name = 0x7f020000
+com.sf.sfc:drawable/ic_sos_status = 0x7f010003
+com.sf.sfc:drawable/ic_home_zone = 0x7f010001
+com.sf.sfc:drawable/ic_safe_finder = 0x7f010002
+com.sf.sfc:drawable/ic_gps_moving = 0x7f010000

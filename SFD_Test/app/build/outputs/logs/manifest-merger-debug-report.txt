@@ -1,0 +1,129 @@
+-- Merging decision tree log ---
+manifest
+ADDED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:2:1-38:12
+INJECTED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:2:1-38:12
+INJECTED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:2:1-38:12
+INJECTED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:2:1-38:12
+	package
+		INJECTED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml
+	android:versionName
+		INJECTED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml
+	android:versionCode
+		INJECTED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml
+	xmlns:android
+		ADDED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:2:11-69
+uses-permission#android.permission.INTERNET
+ADDED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:3:5-67
+	android:name
+		ADDED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:3:22-64
+uses-permission#android.permission.ACCESS_NETWORK_STATE
+ADDED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:4:5-79
+	android:name
+		ADDED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:4:22-76
+uses-permission#android.permission.ACCESS_WIFI_STATE
+ADDED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:5:5-76
+	android:name
+		ADDED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:5:22-73
+uses-permission#android.permission.ACCESS_FINE_LOCATION
+ADDED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:6:5-79
+	android:name
+		ADDED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:6:22-76
+uses-permission#android.permission.ACCESS_COARSE_LOCATION
+ADDED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:7:5-81
+	android:name
+		ADDED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:7:22-78
+uses-permission#android.permission.ACCESS_BACKGROUND_LOCATION
+ADDED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:8:5-85
+	android:name
+		ADDED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:8:22-82
+uses-permission#android.permission.FOREGROUND_SERVICE
+ADDED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:9:5-77
+	android:name
+		ADDED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:9:22-74
+uses-permission#android.permission.FOREGROUND_SERVICE_LOCATION
+ADDED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:10:5-86
+	android:name
+		ADDED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:10:22-83
+uses-permission#android.permission.FOREGROUND_SERVICE_DATA_SYNC
+ADDED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:11:5-87
+	android:name
+		ADDED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:11:22-84
+uses-permission#android.permission.POST_NOTIFICATIONS
+ADDED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:12:5-77
+	android:name
+		ADDED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:12:22-74
+uses-permission#android.permission.SEND_SMS
+ADDED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:13:5-67
+	android:name
+		ADDED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:13:22-64
+uses-permission#android.permission.READ_PHONE_STATE
+ADDED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:14:5-75
+	android:name
+		ADDED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:14:22-72
+uses-permission#android.permission.READ_PHONE_NUMBERS
+ADDED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:14:83-155
+	android:name
+		ADDED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:14:100-152
+uses-feature#android.hardware.sensor.gyroscope
+ADDED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:16:5-95
+	android:required
+		ADDED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:16:68-92
+	android:name
+		ADDED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:16:19-67
+uses-feature#android.hardware.location.gps
+ADDED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:17:5-91
+	android:required
+		ADDED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:17:64-88
+	android:name
+		ADDED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:17:19-63
+uses-feature#android.hardware.telephony
+ADDED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:18:5-88
+	android:required
+		ADDED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:18:61-85
+	android:name
+		ADDED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:18:19-60
+application
+ADDED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:20:5-37:19
+INJECTED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:20:5-37:19
+	android:extractNativeLibs
+		INJECTED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml
+	android:label
+		ADDED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:22:9-41
+	android:allowBackup
+		ADDED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:21:9-35
+	android:theme
+		ADDED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:23:9-40
+	android:usesCleartextTraffic
+		ADDED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:24:9-45
+service#com.sf.sfdtest.TelemetryService
+ADDED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:25:9-28:65
+	android:exported
+		ADDED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:27:13-37
+	android:foregroundServiceType
+		ADDED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:28:13-62
+	android:name
+		ADDED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:26:13-45
+activity#com.sf.sfdtest.MainActivity
+ADDED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:29:9-36:20
+	android:exported
+		ADDED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:31:13-36
+	android:name
+		ADDED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:30:13-41
+intent-filter#action:name:android.intent.action.MAIN+category:name:android.intent.category.LAUNCHER
+ADDED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:32:13-35:29
+action#android.intent.action.MAIN
+ADDED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:33:17-69
+	android:name
+		ADDED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:33:25-66
+category#android.intent.category.LAUNCHER
+ADDED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:34:17-77
+	android:name
+		ADDED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml:34:27-74
+uses-sdk
+INJECTED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml reason: use-sdk injection requested
+INJECTED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml
+INJECTED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml
+	android:targetSdkVersion
+		INJECTED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml
+	android:minSdkVersion
+		INJECTED from C:\GitHub\SFD_Test\app\src\main\AndroidManifest.xml

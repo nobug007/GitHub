@@ -1,0 +1,2 @@
+com.sf.sfdtest:style/AppTheme = 0x7f020000
+com.sf.sfdtest:string/app_name = 0x7f010000

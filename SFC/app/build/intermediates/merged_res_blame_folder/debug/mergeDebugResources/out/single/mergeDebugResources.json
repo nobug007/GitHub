@@ -1,0 +1,22 @@
+[
+    {
+        "merged": "C:\\Users\\nobug\\.gradle\\daemon\\8.12\\com.sf.sfc.app-debug-4:\\drawable_ic_safe_finder.xml.flat",
+        "source": "C:\\Users\\nobug\\.gradle\\daemon\\8.12\\com.sf.sfc.app-main-6:\\drawable\\ic_safe_finder.xml"
+    },
+    {
+        "merged": "C:\\Users\\nobug\\.gradle\\daemon\\8.12\\com.sf.sfc.app-debug-4:\\drawable_ic_safe_finder.png.flat",
+        "source": "C:\\Users\\nobug\\.gradle\\daemon\\8.12\\com.sf.sfc.app-main-6:\\drawable\\ic_safe_finder.png"
+    },
+    {
+        "merged": "com.sf.sfc.app-debug-4:/drawable_ic_sos_status.xml.flat",
+        "source": "com.sf.sfc.app-main-6:/drawable/ic_sos_status.xml"
+    },
+    {
+        "merged": "C:\\Users\\nobug\\.gradle\\daemon\\8.12\\com.sf.sfc.app-debug-4:\\drawable_ic_home_zone.xml.flat",
+        "source": "C:\\Users\\nobug\\.gradle\\daemon\\8.12\\com.sf.sfc.app-main-6:\\drawable\\ic_home_zone.xml"
+    },
+    {
+        "merged": "com.sf.sfc.app-debug-4:/drawable_ic_gps_moving.xml.flat",
+        "source": "com.sf.sfc.app-main-6:/drawable/ic_gps_moving.xml"
+    }
+]
