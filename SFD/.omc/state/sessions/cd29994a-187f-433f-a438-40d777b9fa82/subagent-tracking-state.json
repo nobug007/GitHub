@@ -1,0 +1,71 @@
+{
+  "agents": [
+    {
+      "agent_id": "af490547e031a2844",
+      "agent_type": "unknown",
+      "started_at": "2026-07-04T05:42:01.018Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-07-04T05:42:01.018Z",
+      "duration_ms": 0
+    },
+    {
+      "agent_id": "ab1955b6b0992a641",
+      "agent_type": "unknown",
+      "started_at": "2026-07-04T05:43:08.058Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-07-04T05:43:08.058Z",
+      "duration_ms": 0
+    },
+    {
+      "agent_id": "a8dc440947aaecc06",
+      "agent_type": "unknown",
+      "started_at": "2026-07-04T05:44:31.211Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-07-04T05:44:31.211Z",
+      "duration_ms": 0
+    },
+    {
+      "agent_id": "ae2e38117af359f1b",
+      "agent_type": "unknown",
+      "started_at": "2026-07-04T05:47:29.624Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-07-04T05:47:29.624Z",
+      "duration_ms": 0
+    },
+    {
+      "agent_id": "a824ba62173bcf911",
+      "agent_type": "unknown",
+      "started_at": "2026-07-04T06:00:11.534Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-07-04T06:00:11.534Z",
+      "duration_ms": 0
+    },
+    {
+      "agent_id": "a4c7240bd55208c1e",
+      "agent_type": "unknown",
+      "started_at": "2026-07-04T06:15:50.759Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-07-04T06:15:50.759Z",
+      "duration_ms": 0
+    },
+    {
+      "agent_id": "a0c14bdd6776a58c3",
+      "agent_type": "unknown",
+      "started_at": "2026-07-04T06:17:48.906Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-07-04T06:17:48.906Z",
+      "duration_ms": 0
+    }
+  ],
+  "total_spawned": 0,
+  "total_completed": 7,
+  "total_failed": 0,
+  "last_updated": "2026-07-04T06:17:50.241Z"
+}

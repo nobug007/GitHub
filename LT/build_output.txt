@@ -1,0 +1,23 @@
+  복원할 프로젝트를 확인하는 중...
+C:\GitHub\LT\src\MongLightroomBridge.Infrastructure\MongLightroomBridge.Infrastructure.csproj : warning NU1903: 'SixLabors.ImageSharp' 3.1.5 패키지에 알려진 높음 심각도 취약성인 https://github.com/advisories/GHSA-2cmq-823j-5qj8이(가) 있습니다. [C:\GitHub\LT\MongLightroomBridge.sln]
+C:\GitHub\LT\src\MongLightroomBridge.Infrastructure\MongLightroomBridge.Infrastructure.csproj : warning NU1902: 'SixLabors.ImageSharp' 3.1.5 패키지에 알려진 보통 심각도 취약성인 https://github.com/advisories/GHSA-rxmq-m78w-7wmc이(가) 있습니다. [C:\GitHub\LT\MongLightroomBridge.sln]
+  복원할 모든 프로젝트가 최신 상태입니다.
+C:\GitHub\LT\src\MongLightroomBridge.Infrastructure\MongLightroomBridge.Infrastructure.csproj : warning NU1903: 'SixLabors.ImageSharp' 3.1.5 패키지에 알려진 높음 심각도 취약성인 https://github.com/advisories/GHSA-2cmq-823j-5qj8이(가) 있습니다.
+C:\GitHub\LT\src\MongLightroomBridge.Infrastructure\MongLightroomBridge.Infrastructure.csproj : warning NU1902: 'SixLabors.ImageSharp' 3.1.5 패키지에 알려진 보통 심각도 취약성인 https://github.com/advisories/GHSA-rxmq-m78w-7wmc이(가) 있습니다.
+  MongLightroomBridge.Core -> C:\GitHub\LT\src\MongLightroomBridge.Core\bin\x64\Debug\net8.0\MongLightroomBridge.Core.dll
+  MongLightroomBridge.Infrastructure -> C:\GitHub\LT\src\MongLightroomBridge.Infrastructure\bin\x64\Debug\net8.0\MongLightroomBridge.Infrastructure.dll
+  MongLightroomBridge.App -> C:\GitHub\LT\src\MongLightroomBridge.App\bin\x64\Debug\net8.0-windows\MongLightroomBridge.dll
+  MongLightroomBridge.Tests -> C:\GitHub\LT\src\MongLightroomBridge.Tests\bin\x64\Debug\net8.0\MongLightroomBridge.Tests.dll
+
+빌드했습니다.
+
+C:\GitHub\LT\src\MongLightroomBridge.Infrastructure\MongLightroomBridge.Infrastructure.csproj : warning NU1903: 'SixLabors.ImageSharp' 3.1.5 패키지에 알려진 높음 심각도 취약성인 https://github.com/advisories/GHSA-2cmq-823j-5qj8이(가) 있습니다. [C:\GitHub\LT\MongLightroomBridge.sln]
+C:\GitHub\LT\src\MongLightroomBridge.Infrastructure\MongLightroomBridge.Infrastructure.csproj : warning NU1902: 'SixLabors.ImageSharp' 3.1.5 패키지에 알려진 보통 심각도 취약성인 https://github.com/advisories/GHSA-rxmq-m78w-7wmc이(가) 있습니다. [C:\GitHub\LT\MongLightroomBridge.sln]
+C:\GitHub\LT\src\MongLightroomBridge.Infrastructure\MongLightroomBridge.Infrastructure.csproj : warning NU1903: 'SixLabors.ImageSharp' 3.1.5 패키지에 알려진 높음 심각도 취약성인 https://github.com/advisories/GHSA-2cmq-823j-5qj8이(가) 있습니다.
+C:\GitHub\LT\src\MongLightroomBridge.Infrastructure\MongLightroomBridge.Infrastructure.csproj : warning NU1902: 'SixLabors.ImageSharp' 3.1.5 패키지에 알려진 보통 심각도 취약성인 https://github.com/advisories/GHSA-rxmq-m78w-7wmc이(가) 있습니다.
+    경고 4개
+    오류 0개
+
+경과 시간: 00:00:03.33
+BUILD_EXIT_CODE=0 
+DONE_MARKER 

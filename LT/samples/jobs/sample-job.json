@@ -1,0 +1,23 @@
+{
+  "jobId": "20260903-150000000",
+  "inputFolder": "C:\\GitHub\\Photo",
+  "outputFolder": "C:\\GitHub\\LT\\samples\\output",
+  "profile": "CafeWarm",
+  "format": "jpg",
+  "quality": 92,
+  "adjustments": {
+    "exposure": 0.15,
+    "contrast": 12,
+    "highlights": -35,
+    "shadows": 25,
+    "whites": 5,
+    "blacks": -8,
+    "temperature": 300,
+    "tint": 2,
+    "vibrance": 18,
+    "saturation": 0
+  },
+  "preserveOriginals": true,
+  "dryRun": false,
+  "createdAtUtc": "2026-09-03T15:00:00.000Z"
+}

@@ -29,57 +29,148 @@
 19    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 19-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:7:5-79
 19-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:7:22-76
-20    <uses-permission android:name="android.permission.INTERNET" />
-20-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:8:5-67
-20-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:8:22-64
-21
-22    <uses-feature
-22-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:10:5-88
-23        android:name="android.hardware.type.watch"
-23-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:10:19-61
-24        android:required="true" />
-24-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:10:62-85
-25    <uses-feature
-25-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:11:5-90
-26        android:name="android.hardware.bluetooth_le"
-26-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:11:19-63
-27        android:required="true" />
-27-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:11:64-87
-28
-29    <application
-29-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:13:5-27:19
-30        android:allowBackup="false"
-30-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:14:9-36
-31        android:debuggable="true"
-32        android:extractNativeLibs="false"
-33        android:label="@string/app_name"
-33-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:15:9-41
-34        android:theme="@style/AppTheme" >
-34-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:16:9-40
-35        <uses-library
-35-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:17:9-93
-36            android:name="com.google.android.wearable"
-36-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:17:23-65
-37            android:required="false" />
-37-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:17:66-90
-38
-39        <activity
-39-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:19:9-26:20
-40            android:name="com.sf.sfw.MainActivity"
-40-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:20:13-41
-41            android:exported="true" >
-41-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:21:13-36
-42            <intent-filter>
-42-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:22:13-25:29
-43                <action android:name="android.intent.action.MAIN" />
-43-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:23:17-69
-43-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:23:25-66
-44
-45                <category android:name="android.intent.category.LAUNCHER" />
-45-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:24:17-77
-45-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:24:27-74
-46            </intent-filter>
-47        </activity>
-48    </application>
-49
-50</manifest>
+20    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+20-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:8:5-76
+20-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:8:22-73
+21    <uses-permission android:name="android.permission.WAKE_LOCK" />
+21-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:9:5-68
+21-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:9:22-65
+22    <uses-permission android:name="android.permission.INTERNET" />
+22-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:10:5-67
+22-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:10:22-64
+23    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+23-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:11:5-79
+23-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:11:22-76
+24    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+24-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:12:5-81
+24-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:12:22-78
+25    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+25-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:13:5-85
+25-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:13:22-82
+26    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+26-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:14:5-77
+26-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:14:22-74
+27    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+27-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:15:5-86
+27-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:15:22-83
+28    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+28-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:16:5-87
+28-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:16:22-84
+29    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+29-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:17:5-77
+29-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:17:22-74
+30    <uses-permission android:name="android.permission.SEND_SMS" />
+30-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:18:5-67
+30-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:18:22-64
+31    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+31-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:19:5-81
+31-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:19:22-78
+32
+33    <uses-feature
+33-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:21:5-88
+34        android:name="android.hardware.type.watch"
+34-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:21:19-61
+35        android:required="true" />
+35-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:21:62-85
+36    <uses-feature
+36-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:22:5-90
+37        android:name="android.hardware.bluetooth_le"
+37-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:22:19-63
+38        android:required="true" />
+38-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:22:64-87
+39    <uses-feature
+39-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:23:5-91
+40        android:name="android.hardware.location.gps"
+40-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:23:19-63
+41        android:required="false" />
+41-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:23:64-88
+42    <uses-feature
+42-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:24:5-95
+43        android:name="android.hardware.sensor.gyroscope"
+43-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:24:19-67
+44        android:required="false" />
+44-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:24:68-92
+45    <uses-feature
+45-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:25:5-99
+46        android:name="android.hardware.sensor.accelerometer"
+46-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:25:19-71
+47        android:required="false" />
+47-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:25:72-96
+48    <uses-feature
+48-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:26:5-88
+49        android:name="android.hardware.telephony"
+49-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:26:19-60
+50        android:required="false" />
+50-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:26:61-85
+51
+52    <application
+52-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:28:5-58:19
+53        android:allowBackup="false"
+53-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:29:9-36
+54        android:debuggable="true"
+55        android:extractNativeLibs="false"
+56        android:icon="@drawable/ic_safe_finder"
+56-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:30:9-48
+57        android:label="@string/app_name"
+57-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:31:9-41
+58        android:theme="@style/AppTheme" >
+58-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:32:9-40
+59        <uses-library
+59-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:33:9-93
+60            android:name="com.google.android.wearable"
+60-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:33:23-65
+61            android:required="false" />
+61-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:33:66-90
+62
+63        <service
+63-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:35:9-38:65
+64            android:name="com.sf.sfw.SfwTelemetryService"
+64-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:36:13-48
+65            android:exported="false"
+65-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:37:13-37
+66            android:foregroundServiceType="location|dataSync" />
+66-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:38:13-62
+67
+68        <receiver
+68-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:39:9-48:20
+69            android:name="com.sf.sfw.SfwRestartReceiver"
+69-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:40:13-47
+70            android:exported="false" >
+70-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:41:13-37
+71            <intent-filter>
+71-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:42:13-47:29
+72                <action android:name="android.intent.action.BOOT_COMPLETED" />
+72-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:43:17-79
+72-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:43:25-76
+73                <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
+73-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:44:17-86
+73-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:44:25-83
+74                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+74-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:45:17-84
+74-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:45:25-81
+75                <action android:name="com.sf.sfw.RESTART_TELEMETRY" />
+75-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:46:17-71
+75-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:46:25-68
+76            </intent-filter>
+77        </receiver>
+78
+79        <activity
+79-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:50:9-57:20
+80            android:name="com.sf.sfw.MainActivity"
+80-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:51:13-41
+81            android:exported="true" >
+81-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:52:13-36
+82            <intent-filter>
+82-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:53:13-56:29
+83                <action android:name="android.intent.action.MAIN" />
+83-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:54:17-69
+83-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:54:25-66
+84
+85                <category android:name="android.intent.category.LAUNCHER" />
+85-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:55:17-77
+85-->C:\GitHub\SFW\app\src\main\AndroidManifest.xml:55:27-74
+86            </intent-filter>
+87        </activity>
+88    </application>
+89
+90</manifest>

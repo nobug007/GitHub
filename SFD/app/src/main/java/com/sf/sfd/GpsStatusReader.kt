@@ -25,7 +25,13 @@ class GpsStatusReader(private val context: Context) {
             .filter { provider -> runCatching { manager.isProviderEnabled(provider) }.getOrDefault(false) }
             .mapNotNull { provider -> runCatching { manager.getLastKnownLocation(provider) }.getOrNull() }
             .maxByOrNull(Location::getTime)
-        val location = listOfNotNull(lastObservedLocation, lastKnown).maxByOrNull(Location::getTime)
+        // Only trust a fix that is recent enough. A stale getLastKnownLocation() (e.g. the home
+        // coordinate cached at registration) must not be reported as the current position once
+        // the device has moved; treat anything older than the threshold as "no signal".
+        val now = System.currentTimeMillis()
+        val location = listOfNotNull(lastObservedLocation, lastKnown)
+            .filter { now - it.time <= SfdConfig.GPS_MAX_FIX_AGE_MS }
+            .maxByOrNull(Location::getTime)
         return GpsStatus(
             latitude = location?.latitude,
             longitude = location?.longitude,

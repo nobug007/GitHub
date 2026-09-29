@@ -1,0 +1,7 @@
+{
+  "tool_name": "Bash",
+  "tool_input_preview": "{\"command\":\"git status --short --branch | head -50 && echo \\\"---SFD---\\\" && ls SFD 2>/dev/null\",\"description\":\"Check git status and SFD directory\"}",
+  "error": "Exit code 143\nCommand timed out after 2m 0s",
+  "timestamp": "2026-07-04T06:26:30.777Z",
+  "retry_count": 1
+}

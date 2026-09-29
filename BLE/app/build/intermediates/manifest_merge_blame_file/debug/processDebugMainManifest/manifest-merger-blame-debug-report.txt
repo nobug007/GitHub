@@ -1,0 +1,70 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="com.sf.ble"
+4    android:versionCode="1"
+5    android:versionName="1.0" >
+6
+7    <uses-sdk
+8        android:minSdkVersion="26"
+9        android:targetSdkVersion="35" />
+10
+11    <!--
+12         BLE advertising. ADVERTISE (S+) does not derive location. Legacy BT
+13         permissions gate the pre-31 path.
+14    -->
+15    <uses-permission
+15-->C:\GitHub\BLE\app\src\main\AndroidManifest.xml:6:5-95
+16        android:name="android.permission.BLUETOOTH"
+16-->C:\GitHub\BLE\app\src\main\AndroidManifest.xml:6:22-65
+17        android:maxSdkVersion="30" />
+17-->C:\GitHub\BLE\app\src\main\AndroidManifest.xml:6:66-92
+18    <uses-permission
+18-->C:\GitHub\BLE\app\src\main\AndroidManifest.xml:7:5-101
+19        android:name="android.permission.BLUETOOTH_ADMIN"
+19-->C:\GitHub\BLE\app\src\main\AndroidManifest.xml:7:22-71
+20        android:maxSdkVersion="30" />
+20-->C:\GitHub\BLE\app\src\main\AndroidManifest.xml:7:72-98
+21    <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
+21-->C:\GitHub\BLE\app\src\main\AndroidManifest.xml:8:5-78
+21-->C:\GitHub\BLE\app\src\main\AndroidManifest.xml:8:22-75
+22    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+22-->C:\GitHub\BLE\app\src\main\AndroidManifest.xml:9:5-76
+22-->C:\GitHub\BLE\app\src\main\AndroidManifest.xml:9:22-73
+23
+24    <uses-feature
+24-->C:\GitHub\BLE\app\src\main\AndroidManifest.xml:11:5-90
+25        android:name="android.hardware.bluetooth_le"
+25-->C:\GitHub\BLE\app\src\main\AndroidManifest.xml:11:19-63
+26        android:required="true" />
+26-->C:\GitHub\BLE\app\src\main\AndroidManifest.xml:11:64-87
+27
+28    <application
+28-->C:\GitHub\BLE\app\src\main\AndroidManifest.xml:13:5-26:19
+29        android:allowBackup="true"
+29-->C:\GitHub\BLE\app\src\main\AndroidManifest.xml:14:9-35
+30        android:debuggable="true"
+31        android:extractNativeLibs="false"
+32        android:label="@string/app_name"
+32-->C:\GitHub\BLE\app\src\main\AndroidManifest.xml:15:9-41
+33        android:theme="@android:style/Theme.Material.Light.DarkActionBar" >
+33-->C:\GitHub\BLE\app\src\main\AndroidManifest.xml:16:9-74
+34        <activity
+34-->C:\GitHub\BLE\app\src\main\AndroidManifest.xml:18:9-25:20
+35            android:name="com.sf.ble.MainActivity"
+35-->C:\GitHub\BLE\app\src\main\AndroidManifest.xml:19:13-41
+36            android:exported="true" >
+36-->C:\GitHub\BLE\app\src\main\AndroidManifest.xml:20:13-36
+37            <intent-filter>
+37-->C:\GitHub\BLE\app\src\main\AndroidManifest.xml:21:13-24:29
+38                <action android:name="android.intent.action.MAIN" />
+38-->C:\GitHub\BLE\app\src\main\AndroidManifest.xml:22:17-69
+38-->C:\GitHub\BLE\app\src\main\AndroidManifest.xml:22:25-66
+39
+40                <category android:name="android.intent.category.LAUNCHER" />
+40-->C:\GitHub\BLE\app\src\main\AndroidManifest.xml:23:17-77
+40-->C:\GitHub\BLE\app\src\main\AndroidManifest.xml:23:27-74
+41            </intent-filter>
+42        </activity>
+43    </application>
+44
+45</manifest>

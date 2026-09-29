@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ESP32-CAM 의 SoftAP 는 평문 HTTP 만 제공한다. Android 9 부터 cleartext 가 기본 차단이므로
+     카메라가 쓰는 사설 대역만 예외로 허용한다. 그 외 도메인은 그대로 차단된 상태로 둔다. -->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">192.168.4.1</domain>
+        <domain includeSubdomains="false">192.168.4.2</domain>
+    </domain-config>
+</network-security-config>

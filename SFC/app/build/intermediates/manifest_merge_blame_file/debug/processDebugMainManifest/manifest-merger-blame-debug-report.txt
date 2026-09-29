@@ -38,52 +38,63 @@
 22    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
 22-->C:\GitHub\SFC\app\src\main\AndroidManifest.xml:10:5-76
 22-->C:\GitHub\SFC\app\src\main\AndroidManifest.xml:10:22-73
-23
-24    <uses-feature
-24-->C:\GitHub\SFC\app\src\main\AndroidManifest.xml:12:5-90
-25        android:name="android.hardware.bluetooth_le"
-25-->C:\GitHub\SFC\app\src\main\AndroidManifest.xml:12:19-63
-26        android:required="true" />
-26-->C:\GitHub\SFC\app\src\main\AndroidManifest.xml:12:64-87
-27
-28    <application
-28-->C:\GitHub\SFC\app\src\main\AndroidManifest.xml:14:5-31:19
-29        android:allowBackup="true"
-29-->C:\GitHub\SFC\app\src\main\AndroidManifest.xml:15:9-35
-30        android:debuggable="true"
-31        android:extractNativeLibs="false"
-32        android:icon="@drawable/ic_safe_finder"
-32-->C:\GitHub\SFC\app\src\main\AndroidManifest.xml:16:9-48
-33        android:label="@string/app_name"
-33-->C:\GitHub\SFC\app\src\main\AndroidManifest.xml:17:9-41
-34        android:theme="@style/AppTheme" >
-34-->C:\GitHub\SFC\app\src\main\AndroidManifest.xml:18:9-40
-35        <service
-35-->C:\GitHub\SFC\app\src\main\AndroidManifest.xml:19:9-21:40
-36            android:name="com.sf.sfc.SfcBleMonitorService"
-36-->C:\GitHub\SFC\app\src\main\AndroidManifest.xml:20:13-49
-37            android:exported="false" />
-37-->C:\GitHub\SFC\app\src\main\AndroidManifest.xml:21:13-37
-38
-39        <activity
-39-->C:\GitHub\SFC\app\src\main\AndroidManifest.xml:22:9-30:20
-40            android:name="com.sf.sfc.MainActivity"
-40-->C:\GitHub\SFC\app\src\main\AndroidManifest.xml:23:13-41
-41            android:exported="true"
-41-->C:\GitHub\SFC\app\src\main\AndroidManifest.xml:24:13-36
-42            android:screenOrientation="portrait" >
-42-->C:\GitHub\SFC\app\src\main\AndroidManifest.xml:25:13-49
-43            <intent-filter>
-43-->C:\GitHub\SFC\app\src\main\AndroidManifest.xml:26:13-29:29
-44                <action android:name="android.intent.action.MAIN" />
-44-->C:\GitHub\SFC\app\src\main\AndroidManifest.xml:27:17-69
-44-->C:\GitHub\SFC\app\src\main\AndroidManifest.xml:27:25-66
-45
-46                <category android:name="android.intent.category.LAUNCHER" />
-46-->C:\GitHub\SFC\app\src\main\AndroidManifest.xml:28:17-77
-46-->C:\GitHub\SFC\app\src\main\AndroidManifest.xml:28:27-74
-47            </intent-filter>
-48        </activity>
-49    </application>
-50
-51</manifest>
+23    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+23-->C:\GitHub\SFC\app\src\main\AndroidManifest.xml:11:5-77
+23-->C:\GitHub\SFC\app\src\main\AndroidManifest.xml:11:22-74
+24    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
+24-->C:\GitHub\SFC\app\src\main\AndroidManifest.xml:12:5-94
+24-->C:\GitHub\SFC\app\src\main\AndroidManifest.xml:12:22-91
+25    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+25-->C:\GitHub\SFC\app\src\main\AndroidManifest.xml:13:5-77
+25-->C:\GitHub\SFC\app\src\main\AndroidManifest.xml:13:22-74
+26
+27    <uses-feature
+27-->C:\GitHub\SFC\app\src\main\AndroidManifest.xml:15:5-90
+28        android:name="android.hardware.bluetooth_le"
+28-->C:\GitHub\SFC\app\src\main\AndroidManifest.xml:15:19-63
+29        android:required="true" />
+29-->C:\GitHub\SFC\app\src\main\AndroidManifest.xml:15:64-87
+30
+31    <application
+31-->C:\GitHub\SFC\app\src\main\AndroidManifest.xml:17:5-35:19
+32        android:allowBackup="true"
+32-->C:\GitHub\SFC\app\src\main\AndroidManifest.xml:18:9-35
+33        android:debuggable="true"
+34        android:extractNativeLibs="false"
+35        android:icon="@drawable/ic_safe_finder"
+35-->C:\GitHub\SFC\app\src\main\AndroidManifest.xml:19:9-48
+36        android:label="@string/app_name"
+36-->C:\GitHub\SFC\app\src\main\AndroidManifest.xml:20:9-41
+37        android:theme="@style/AppTheme" >
+37-->C:\GitHub\SFC\app\src\main\AndroidManifest.xml:21:9-40
+38        <service
+38-->C:\GitHub\SFC\app\src\main\AndroidManifest.xml:22:9-25:63
+39            android:name="com.sf.sfc.SfcBleMonitorService"
+39-->C:\GitHub\SFC\app\src\main\AndroidManifest.xml:23:13-49
+40            android:exported="false"
+40-->C:\GitHub\SFC\app\src\main\AndroidManifest.xml:24:13-37
+41            android:foregroundServiceType="connectedDevice" />
+41-->C:\GitHub\SFC\app\src\main\AndroidManifest.xml:25:13-60
+42
+43        <activity
+43-->C:\GitHub\SFC\app\src\main\AndroidManifest.xml:26:9-34:20
+44            android:name="com.sf.sfc.MainActivity"
+44-->C:\GitHub\SFC\app\src\main\AndroidManifest.xml:27:13-41
+45            android:exported="true"
+45-->C:\GitHub\SFC\app\src\main\AndroidManifest.xml:28:13-36
+46            android:screenOrientation="portrait" >
+46-->C:\GitHub\SFC\app\src\main\AndroidManifest.xml:29:13-49
+47            <intent-filter>
+47-->C:\GitHub\SFC\app\src\main\AndroidManifest.xml:30:13-33:29
+48                <action android:name="android.intent.action.MAIN" />
+48-->C:\GitHub\SFC\app\src\main\AndroidManifest.xml:31:17-69
+48-->C:\GitHub\SFC\app\src\main\AndroidManifest.xml:31:25-66
+49
+50                <category android:name="android.intent.category.LAUNCHER" />
+50-->C:\GitHub\SFC\app\src\main\AndroidManifest.xml:32:17-77
+50-->C:\GitHub\SFC\app\src\main\AndroidManifest.xml:32:27-74
+51            </intent-filter>
+52        </activity>
+53    </application>
+54
+55</manifest>

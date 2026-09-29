@@ -1,0 +1,3 @@
+com.sf.hotspot:xml/accessibility_config = 0x7f020000
+com.sf.hotspot:string/hotspot_a11y_description = 0x7f010001
+com.sf.hotspot:string/app_name = 0x7f010000

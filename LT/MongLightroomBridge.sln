@@ -1,0 +1,43 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.9.34728.123
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MongLightroomBridge.Core", "src\MongLightroomBridge.Core\MongLightroomBridge.Core.csproj", "{C5774F68-C93C-447D-ABAC-46DB927DB750}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MongLightroomBridge.Infrastructure", "src\MongLightroomBridge.Infrastructure\MongLightroomBridge.Infrastructure.csproj", "{CFC533BF-A663-43ED-B1EA-F765975258C5}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MongLightroomBridge.App", "src\MongLightroomBridge.App\MongLightroomBridge.App.csproj", "{9C44FF26-565F-460C-8BA7-89833F57975D}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MongLightroomBridge.Tests", "src\MongLightroomBridge.Tests\MongLightroomBridge.Tests.csproj", "{B5D1B0D8-420B-4732-AC5E-A25EF9AD645A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C5774F68-C93C-447D-ABAC-46DB927DB750}.Debug|x64.ActiveCfg = Debug|x64
+		{C5774F68-C93C-447D-ABAC-46DB927DB750}.Debug|x64.Build.0 = Debug|x64
+		{C5774F68-C93C-447D-ABAC-46DB927DB750}.Release|x64.ActiveCfg = Release|x64
+		{C5774F68-C93C-447D-ABAC-46DB927DB750}.Release|x64.Build.0 = Release|x64
+		{CFC533BF-A663-43ED-B1EA-F765975258C5}.Debug|x64.ActiveCfg = Debug|x64
+		{CFC533BF-A663-43ED-B1EA-F765975258C5}.Debug|x64.Build.0 = Debug|x64
+		{CFC533BF-A663-43ED-B1EA-F765975258C5}.Release|x64.ActiveCfg = Release|x64
+		{CFC533BF-A663-43ED-B1EA-F765975258C5}.Release|x64.Build.0 = Release|x64
+		{9C44FF26-565F-460C-8BA7-89833F57975D}.Debug|x64.ActiveCfg = Debug|x64
+		{9C44FF26-565F-460C-8BA7-89833F57975D}.Debug|x64.Build.0 = Debug|x64
+		{9C44FF26-565F-460C-8BA7-89833F57975D}.Release|x64.ActiveCfg = Release|x64
+		{9C44FF26-565F-460C-8BA7-89833F57975D}.Release|x64.Build.0 = Release|x64
+		{B5D1B0D8-420B-4732-AC5E-A25EF9AD645A}.Debug|x64.ActiveCfg = Debug|x64
+		{B5D1B0D8-420B-4732-AC5E-A25EF9AD645A}.Debug|x64.Build.0 = Debug|x64
+		{B5D1B0D8-420B-4732-AC5E-A25EF9AD645A}.Release|x64.ActiveCfg = Release|x64
+		{B5D1B0D8-420B-4732-AC5E-A25EF9AD645A}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {1BE0D596-0BA5-42B9-9822-EC561ECD79FA}
+	EndGlobalSection
+EndGlobal

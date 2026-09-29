@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="NONE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="b2bd42f3-96c8-4d18-86af-84239573f62c" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/../260602/data_analysis/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../260602/data_analysis/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../260602/data_analysis/app/favicon.ico" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../260602/data_analysis/app/globals.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../260602/data_analysis/app/layout.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../260602/data_analysis/app/page.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../260602/data_analysis/components.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../260602/data_analysis/components/analysis/BasicAnalysis.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../260602/data_analysis/components/analysis/ColumnInfoTable.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../260602/data_analysis/components/analysis/DataPreview.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../260602/data_analysis/components/analysis/SummaryCards.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../260602/data_analysis/components/layout/AppLayout.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../260602/data_analysis/components/layout/Header.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../260602/data_analysis/components/layout/MainContent.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../260602/data_analysis/components/layout/Sidebar.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../260602/data_analysis/components/ui/badge.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../260602/data_analysis/components/ui/button.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../260602/data_analysis/components/ui/card.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../260602/data_analysis/components/ui/scroll-area.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../260602/data_analysis/components/ui/separator.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../260602/data_analysis/components/ui/table.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../260602/data_analysis/components/ui/tooltip.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../260602/data_analysis/components/upload/FileUpload.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../260602/data_analysis/eslint.config.mjs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../260602/data_analysis/lib/analysis.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../260602/data_analysis/lib/parsers.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../260602/data_analysis/lib/types.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../260602/data_analysis/lib/utils.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../260602/data_analysis/next.config.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../260602/data_analysis/package-lock.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../260602/data_analysis/package.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../260602/data_analysis/postcss.config.mjs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../260602/data_analysis/public/file.svg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../260602/data_analysis/public/globe.svg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../260602/data_analysis/public/next.svg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../260602/data_analysis/public/vercel.svg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../260602/data_analysis/public/window.svg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../260602/data_analysis/public/소상공인매출내역(2021~2026).xlsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../260602/data_analysis/store/dataStore.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../260602/data_analysis/tsconfig.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Multi/study-note-organizer/.env.example" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Multi/study-note-organizer/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Multi/study-note-organizer/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Multi/study-note-organizer/eslint.config.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Multi/study-note-organizer/index.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Multi/study-note-organizer/package-lock.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Multi/study-note-organizer/package.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Multi/study-note-organizer/public/favicon.svg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Multi/study-note-organizer/public/icons.svg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Multi/study-note-organizer/src/App.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Multi/study-note-organizer/src/assets/hero.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Multi/study-note-organizer/src/assets/react.svg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Multi/study-note-organizer/src/assets/vite.svg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Multi/study-note-organizer/src/components/ErrorDisplay.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Multi/study-note-organizer/src/components/Header.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Multi/study-note-organizer/src/components/HistoryPanel.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Multi/study-note-organizer/src/components/InputSection.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Multi/study-note-organizer/src/components/LoadingSpinner.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Multi/study-note-organizer/src/components/ResultCard.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Multi/study-note-organizer/src/components/ResultSection.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Multi/study-note-organizer/src/components/SettingsPanel.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Multi/study-note-organizer/src/components/Toast.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Multi/study-note-organizer/src/context/AppContext.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Multi/study-note-organizer/src/hooks/useLocalStorage.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Multi/study-note-organizer/src/hooks/useOpenRouter.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Multi/study-note-organizer/src/hooks/useTheme.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Multi/study-note-organizer/src/index.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Multi/study-note-organizer/src/main.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Multi/study-note-organizer/src/types/index.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Multi/study-note-organizer/src/utils/constants.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Multi/study-note-organizer/src/utils/download.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Multi/study-note-organizer/src/utils/formatters.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Multi/study-note-organizer/src/utils/prompts.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Multi/study-note-organizer/tsconfig.app.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Multi/study-note-organizer/tsconfig.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Multi/study-note-organizer/tsconfig.node.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Multi/study-note-organizer/vite.config.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/sf/sfd/SfdConfig.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/sf/sfd/SfdConfig.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/sf/sfd/SfdStore.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/sf/sfd/SfdStore.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../api/weather.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../claude_0527/api/weather.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../claude_0527/package.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../claude_0527/vercel.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../claude_0527/weather.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../landingPage/index.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../safeFinder/android-app/.idea/caches/deviceStreaming.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../safeFinder/android-app/.idea/caches/deviceStreaming.xml" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ClangdSettings">
+    <option name="formatViaClangd" value="false" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 1
+}]]></component>
+  <component name="ProjectId" id="3G1iNClLzoLuOYpLpPiXHN3Ix8P" />
+  <component name="ProjectViewState">
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.cidr.known.project.marker": "true",
+    "RunOnceActivity.readMode.enableVisualFormatting": "true",
+    "android.gradle.sync.needed": "true",
+    "cf.first.check.clang-format": "false",
+    "cidr.known.project.marker": "true",
+    "git-widget-placeholder": "main",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "C:/GitHub/SFD"
+  }
+}]]></component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="b2bd42f3-96c8-4d18-86af-84239573f62c" name="Changes" comment="" />
+      <created>1783145434986</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1783145434986</updated>
+    </task>
+    <servers />
+  </component>
+</project>

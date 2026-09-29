@@ -1,0 +1,19 @@
+C:\GitHub\LT\src\MongLightroomBridge.Infrastructure\MongLightroomBridge.Infrastructure.csproj : warning NU1903: 'SixLabors.ImageSharp' 3.1.5 패키지에 알려진 높음 심각도 취약성인 https://github.com/advisories/GHSA-2cmq-823j-5qj8이(가) 있습니다. [C:\GitHub\LT\src\MongLightroomBridge.DryRunDemo\MongLightroomBridge.DryRunDemo.csproj]
+C:\GitHub\LT\src\MongLightroomBridge.Infrastructure\MongLightroomBridge.Infrastructure.csproj : warning NU1902: 'SixLabors.ImageSharp' 3.1.5 패키지에 알려진 보통 심각도 취약성인 https://github.com/advisories/GHSA-rxmq-m78w-7wmc이(가) 있습니다. [C:\GitHub\LT\src\MongLightroomBridge.DryRunDemo\MongLightroomBridge.DryRunDemo.csproj]
+C:\GitHub\LT\src\MongLightroomBridge.Infrastructure\MongLightroomBridge.Infrastructure.csproj : warning NU1903: 'SixLabors.ImageSharp' 3.1.5 패키지에 알려진 높음 심각도 취약성인 https://github.com/advisories/GHSA-2cmq-823j-5qj8이(가) 있습니다.
+C:\GitHub\LT\src\MongLightroomBridge.Infrastructure\MongLightroomBridge.Infrastructure.csproj : warning NU1902: 'SixLabors.ImageSharp' 3.1.5 패키지에 알려진 보통 심각도 취약성인 https://github.com/advisories/GHSA-rxmq-m78w-7wmc이(가) 있습니다.
+Profile: CafeWarm
+Input:  C:\GitHub\Photo\_sample_input
+Output: C:\GitHub\Photo\output
+
+[Running] 0/0
+[Running] 0/1
+
+=== RESULT ===
+Status: Completed
+Total: 1, Processed: 1
+OK   1S8A6448.JPG -> C:\GitHub\Photo\output\1S8A6448_dryrun.jpg
+[Running] 1/1
+[Completed] 1/1
+DEMO_EXIT_CODE=0 
+DONE_MARKER 

@@ -28,6 +28,8 @@ data class SafeZoneInfo(
     val bssid: String,
     val ssid: String,
     val enabled: Boolean,
+    val centerLat: Double? = null,
+    val centerLng: Double? = null,
     val rawJson: String
 )
 
@@ -36,7 +38,14 @@ data class SafeZoneDraft(
     val name: String,
     val bssid: String,
     val ssid: String,
-    val enabled: Boolean
+    val enabled: Boolean,
+    // FIXED_AP (일반 공유기) or REGISTERED_HOTSPOT (내 폰 핫스팟, bleId != null).
+    val apType: String = "FIXED_AP",
+    val bleId: String = "",
+    // Home geofence center captured from the guardian phone's GPS at registration time. Lets the
+    // map show the Home location for a FIXED_AP zone (the tracked device has no GPS while at home).
+    val centerLat: Double? = null,
+    val centerLng: Double? = null
 ) {
     fun toJson(): String = JSONObject()
         .put("zoneType", zoneType)
@@ -44,6 +53,13 @@ data class SafeZoneDraft(
         .put("bssid", bssid)
         .put("ssid", ssid)
         .put("enabled", enabled)
+        .put("apType", apType)
+        .apply { if (bleId.isNotBlank()) put("bleId", bleId) }
+        .apply {
+            if (centerLat != null && centerLng != null) {
+                put("centerLat", centerLat); put("centerLng", centerLng)
+            }
+        }
         .toString()
 }
 
@@ -131,6 +147,9 @@ data class DeviceLogEntry(
     val deviceStatus: String,
     val latitude: Double?,
     val longitude: Double?,
+    // Server-provided flag: true when the reading carries coordinates (Arduino sends GPS even on
+    // Wi-Fi, so filtering the map route by locationType=="GPS" wrongly dropped those points).
+    val hasLocation: Boolean?,
     val apName: String?,
     val verb: String,
     val rawJson: String
@@ -181,6 +200,8 @@ class SfcApiClient {
                 bssid = json.optString("bssid"),
                 ssid = json.optString("ssid"),
                 enabled = json.optBoolean("enabled"),
+                centerLat = if (json.isNull("centerLat")) null else json.optDouble("centerLat").takeIf { !it.isNaN() },
+                centerLng = if (json.isNull("centerLng")) null else json.optDouble("centerLng").takeIf { !it.isNaN() },
                 rawJson = json.toString()
             )
         }
@@ -292,11 +313,24 @@ class SfcApiClient {
 
     fun getDeviceLogsByDate(deviceId: String, date: String, page: Int = 0, size: Int = 50): DeviceLogPage {
         val body = getText("https://sf-api.ese-lab.com/api/v1/devices/$deviceId/logs?date=$date&page=$page&size=$size")
+        return parseLogPage(body, deviceId)
+    }
+
+    /**
+     * Elder location history (same shape as device logs: data.logs[] with lat/lng + status).
+     * Used by the map view to draw the traveled route. A plain request returns the current day.
+     */
+    fun getElderHistory(elderId: String, page: Int = 0, size: Int = 50): DeviceLogPage {
+        val body = getText("https://sf-api.ese-lab.com/api/v1/elders/$elderId/history?page=$page&size=$size")
+        return parseLogPage(body, "")
+    }
+
+    private fun parseLogPage(body: String, fallbackDeviceId: String): DeviceLogPage {
         val root = JSONObject(body)
         val data = root.optJSONObject("data") ?: root
         val logs = data.optJSONArray("logs") ?: JSONArray()
         return DeviceLogPage(
-            deviceId = data.optString("deviceId", deviceId),
+            deviceId = data.optString("deviceId", fallbackDeviceId),
             logs = (0 until logs.length()).mapNotNull { index ->
                 val item = logs.optJSONObject(index) ?: return@mapNotNull null
                 DeviceLogEntry(
@@ -311,8 +345,9 @@ class SfcApiClient {
                     battery = item.optNullableInt("battery"),
                     signal = item.optNullableInt("signal"),
                     deviceStatus = item.optString("deviceStatus"),
-                    latitude = item.optNullableDouble("lat"),
-                    longitude = item.optNullableDouble("lng"),
+                    latitude = item.optNullableDouble("lat") ?: item.optNullableDouble("latitude"),
+                    longitude = item.optNullableDouble("lng") ?: item.optNullableDouble("longitude"),
+                    hasLocation = if (item.isNull("hasLocation")) null else item.optBoolean("hasLocation"),
                     apName = item.optNullableString("apName"),
                     verb = item.optString("verb"),
                     rawJson = item.toString()

@@ -49,22 +49,33 @@ class TelemetryPayloadFactory(private val store: SfdStore) {
             "WIFI" -> {
                 val apName = location.apName.ifBlank { store.firstWifiSsid().ifBlank { location.bssid.ifBlank { store.firstWifiBssid() } } }
                 reading.put("apName", apName)
-            }
-            "BLE" -> {
-                reading
-                    .put("bluetoothName", location.bluetoothName.ifBlank { store.bleSafeZoneName() })
-                    .put("bluetoothAddress", location.bluetoothAddress.ifBlank { store.bleSafeZoneAddress() })
+                // Also report the BSSID so the server can match the WiFi safezone by BSSID (not
+                // just SSID). Without it the backend may fail its own safezone match and flag the
+                // reading as "outside" even though the device reports inSafeZone=true.
+                val bssid = location.bssid.ifBlank { store.firstWifiBssid() }
+                if (bssid.isNotBlank()) reading.put("bssid", bssid)
             }
             "GPS" -> {
                 // GPS coordinates are added below for every non-WiFi report.
             }
         }
 
-        if (location.locationType != "WIFI") {
-            location.latitude?.let { reading.put("lat", it) }
-            location.longitude?.let { reading.put("lng", it) }
-            location.accuracy?.let { reading.put("accuracy", it.toInt()) }
+        // Attach the safe zone's server id so the backend can match by id instead of re-deriving
+        // (and mis-flagging) the zone. Only meaningful while the device is inside a safe zone.
+        if (inSafeZone) {
+            var safeZoneId = if (location.locationType == "WIFI") {
+                store.safeZoneIdForSsid(location.apName.ifBlank { store.firstWifiSsid() })
+            } else ""
+            // Guardian-proximity zone: no registered Wi-Fi zone matches it, so use the BLE zone id.
+            if (safeZoneId.isBlank()) safeZoneId = store.bleSafeZoneId()
+            if (safeZoneId.isNotBlank()) reading.put("safeZoneId", safeZoneId)
         }
+
+        // GPS coordinates: included whenever present — GPS tracking, BLE/보호자 근접, or a hotspot
+        // WiFi connection (mobile). A fixed home AP carries no GPS, so nothing is added there.
+        location.latitude?.let { reading.put("lat", it) }
+        location.longitude?.let { reading.put("lng", it) }
+        location.accuracy?.let { reading.put("accuracy", it.toInt()) }
 
         when (verb) {
             "stayed" -> reading.put(

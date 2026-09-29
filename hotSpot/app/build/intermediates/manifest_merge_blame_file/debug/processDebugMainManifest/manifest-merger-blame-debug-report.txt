@@ -1,0 +1,128 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="com.sf.hotspot"
+4    android:versionCode="1"
+5    android:versionName="1.0" >
+6
+7    <uses-sdk
+8        android:minSdkVersion="26"
+9        android:targetSdkVersion="35" />
+10
+11    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+11-->C:\GitHub\hotSpot\app\src\main\AndroidManifest.xml:4:5-77
+11-->C:\GitHub\hotSpot\app\src\main\AndroidManifest.xml:4:22-74
+12    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+12-->C:\GitHub\hotSpot\app\src\main\AndroidManifest.xml:5:5-87
+12-->C:\GitHub\hotSpot\app\src\main\AndroidManifest.xml:5:22-84
+13    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
+13-->C:\GitHub\hotSpot\app\src\main\AndroidManifest.xml:6:5-94
+13-->C:\GitHub\hotSpot\app\src\main\AndroidManifest.xml:6:22-91
+14    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+14-->C:\GitHub\hotSpot\app\src\main\AndroidManifest.xml:7:5-77
+14-->C:\GitHub\hotSpot\app\src\main\AndroidManifest.xml:7:22-74
+15
+16    <!--
+17         BLE scanning for the tablet's hotspot-trigger advertisement. neverForLocation:
+18         we match on a service UUID and do not derive physical location.
+19    -->
+20    <uses-permission
+20-->C:\GitHub\hotSpot\app\src\main\AndroidManifest.xml:11:5-95
+21        android:name="android.permission.BLUETOOTH"
+21-->C:\GitHub\hotSpot\app\src\main\AndroidManifest.xml:11:22-65
+22        android:maxSdkVersion="30" />
+22-->C:\GitHub\hotSpot\app\src\main\AndroidManifest.xml:11:66-92
+23    <uses-permission
+23-->C:\GitHub\hotSpot\app\src\main\AndroidManifest.xml:12:5-101
+24        android:name="android.permission.BLUETOOTH_ADMIN"
+24-->C:\GitHub\hotSpot\app\src\main\AndroidManifest.xml:12:22-71
+25        android:maxSdkVersion="30" />
+25-->C:\GitHub\hotSpot\app\src\main\AndroidManifest.xml:12:72-98
+26    <uses-permission
+26-->C:\GitHub\hotSpot\app\src\main\AndroidManifest.xml:13:5-14:58
+27        android:name="android.permission.BLUETOOTH_SCAN"
+27-->C:\GitHub\hotSpot\app\src\main\AndroidManifest.xml:13:22-70
+28        android:usesPermissionFlags="neverForLocation" />
+28-->C:\GitHub\hotSpot\app\src\main\AndroidManifest.xml:14:9-55
+29    <uses-permission
+29-->C:\GitHub\hotSpot\app\src\main\AndroidManifest.xml:15:5-16:38
+30        android:name="android.permission.ACCESS_FINE_LOCATION"
+30-->C:\GitHub\hotSpot\app\src\main\AndroidManifest.xml:15:22-76
+31        android:maxSdkVersion="30" />
+31-->C:\GitHub\hotSpot\app\src\main\AndroidManifest.xml:16:9-35
+32
+33    <uses-feature
+33-->C:\GitHub\hotSpot\app\src\main\AndroidManifest.xml:18:5-90
+34        android:name="android.hardware.bluetooth_le"
+34-->C:\GitHub\hotSpot\app\src\main\AndroidManifest.xml:18:19-63
+35        android:required="true" />
+35-->C:\GitHub\hotSpot\app\src\main\AndroidManifest.xml:18:64-87
+36
+37    <application
+37-->C:\GitHub\hotSpot\app\src\main\AndroidManifest.xml:20:5-56:19
+38        android:allowBackup="true"
+38-->C:\GitHub\hotSpot\app\src\main\AndroidManifest.xml:21:9-35
+39        android:debuggable="true"
+40        android:extractNativeLibs="false"
+41        android:label="@string/app_name"
+41-->C:\GitHub\hotSpot\app\src\main\AndroidManifest.xml:22:9-41
+42        android:theme="@android:style/Theme.Material.Light.DarkActionBar" >
+42-->C:\GitHub\hotSpot\app\src\main\AndroidManifest.xml:23:9-74
+43        <activity
+43-->C:\GitHub\hotSpot\app\src\main\AndroidManifest.xml:25:9-32:20
+44            android:name="com.sf.hotspot.MainActivity"
+44-->C:\GitHub\hotSpot\app\src\main\AndroidManifest.xml:26:13-41
+45            android:exported="true" >
+45-->C:\GitHub\hotSpot\app\src\main\AndroidManifest.xml:27:13-36
+46            <intent-filter>
+46-->C:\GitHub\hotSpot\app\src\main\AndroidManifest.xml:28:13-31:29
+47                <action android:name="android.intent.action.MAIN" />
+47-->C:\GitHub\hotSpot\app\src\main\AndroidManifest.xml:29:17-69
+47-->C:\GitHub\hotSpot\app\src\main\AndroidManifest.xml:29:25-66
+48
+49                <category android:name="android.intent.category.LAUNCHER" />
+49-->C:\GitHub\hotSpot\app\src\main\AndroidManifest.xml:30:17-77
+49-->C:\GitHub\hotSpot\app\src\main\AndroidManifest.xml:30:27-74
+50            </intent-filter>
+51        </activity>
+52
+53        <service
+53-->C:\GitHub\hotSpot\app\src\main\AndroidManifest.xml:34:9-37:56
+54            android:name="com.sf.hotspot.HotspotToggleService"
+54-->C:\GitHub\hotSpot\app\src\main\AndroidManifest.xml:35:13-49
+55            android:exported="false"
+55-->C:\GitHub\hotSpot\app\src\main\AndroidManifest.xml:36:13-37
+56            android:foregroundServiceType="dataSync" />
+56-->C:\GitHub\hotSpot\app\src\main\AndroidManifest.xml:37:13-53
+57        <service
+57-->C:\GitHub\hotSpot\app\src\main\AndroidManifest.xml:39:9-42:63
+58            android:name="com.sf.hotspot.BleTriggerService"
+58-->C:\GitHub\hotSpot\app\src\main\AndroidManifest.xml:40:13-46
+59            android:exported="false"
+59-->C:\GitHub\hotSpot\app\src\main\AndroidManifest.xml:41:13-37
+60            android:foregroundServiceType="connectedDevice" />
+60-->C:\GitHub\hotSpot\app\src\main\AndroidManifest.xml:42:13-60
+61        <service
+61-->C:\GitHub\hotSpot\app\src\main\AndroidManifest.xml:44:9-54:19
+62            android:name="com.sf.hotspot.HotspotAccessibilityService"
+62-->C:\GitHub\hotSpot\app\src\main\AndroidManifest.xml:45:13-56
+63            android:exported="true"
+63-->C:\GitHub\hotSpot\app\src\main\AndroidManifest.xml:46:13-36
+64            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE" >
+64-->C:\GitHub\hotSpot\app\src\main\AndroidManifest.xml:47:13-79
+65            <intent-filter>
+65-->C:\GitHub\hotSpot\app\src\main\AndroidManifest.xml:48:13-50:29
+66                <action android:name="android.accessibilityservice.AccessibilityService" />
+66-->C:\GitHub\hotSpot\app\src\main\AndroidManifest.xml:49:17-92
+66-->C:\GitHub\hotSpot\app\src\main\AndroidManifest.xml:49:25-89
+67            </intent-filter>
+68
+69            <meta-data
+69-->C:\GitHub\hotSpot\app\src\main\AndroidManifest.xml:51:13-53:64
+70                android:name="android.accessibilityservice"
+70-->C:\GitHub\hotSpot\app\src\main\AndroidManifest.xml:52:17-60
+71                android:resource="@xml/accessibility_config" />
+71-->C:\GitHub\hotSpot\app\src\main\AndroidManifest.xml:53:17-61
+72        </service>
+73    </application>
+74
+75</manifest>

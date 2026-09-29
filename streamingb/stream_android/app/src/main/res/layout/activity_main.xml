@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/black">
+
+    <!-- 영상만 나온다. 버튼도 메뉴도 없다. -->
+    <org.videolan.libvlc.util.VLCVideoLayout
+        android:id="@+id/video"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <!-- 연결 중이거나 실패했을 때만 보인다. -->
+    <TextView
+        android:id="@+id/status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:padding="16dp"
+        android:textColor="#CFD8DC"
+        android:textSize="16sp"
+        android:gravity="center"
+        android:background="#B3000000"
+        android:text="@string/connecting" />
+</FrameLayout>

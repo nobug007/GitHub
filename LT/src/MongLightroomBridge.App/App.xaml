@@ -1,0 +1,20 @@
+<Application x:Class="MongLightroomBridge.App.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!--
+    No StartupUri here on purpose: MainWindow has no parameterless constructor (it takes a
+    MainViewModel via DI - see MainWindow.xaml.cs), so WPF's default StartupUri pipeline can't
+    construct it and crashes with a XamlParseException/MissingMethodException before OnStartup
+    even runs. App.xaml.cs's OnStartup already builds the DI host and does
+    _host.Services.GetRequiredService<MainWindow>().Show() itself - that's the only place
+    MainWindow should ever get created.
+    -->
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Views/Styles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

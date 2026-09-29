@@ -1,22 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- 걷는 사람. 안전구역 밖(이동중) 상태에 쓴다. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="256dp"
-    android:height="256dp"
-    android:viewportWidth="256"
-    android:viewportHeight="256">
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="#000000">
     <path
-        android:fillColor="#F59E0B"
-        android:pathData="M128,128m-118,0a118,118 0,1 1,236 0a118,118 0,1 1,-236 0" />
+        android:pathData="M13.6,4.4m-1.9,0a1.9,1.9 0,1 1,3.8 0a1.9,1.9 0,1 1,-3.8 0"
+        android:fillColor="#000000" />
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M128,44 C92,44 64,72 64,108 C64,156 128,218 128,218 C128,218 192,156 192,108 C192,72 164,44 128,44 Z" />
+        android:pathData="M13.1,8.2 L10,10.4 L11.6,13.5 L10.5,16.9 L7.9,21"
+        android:strokeColor="#000000"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
     <path
-        android:fillColor="#F59E0B"
-        android:pathData="M128,82 A26,26 0,1 0 128,134 A26,26 0,1 0 128,82" />
+        android:pathData="M11.6,13.5 L15,15.2 L16.5,21"
+        android:strokeColor="#000000"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M56,188 L94,166 L117,179 L152,152 L199,179 L199,200 L56,200 Z" />
+        android:pathData="M10,10.4 L6.6,12"
+        android:strokeColor="#000000"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round" />
     <path
-        android:fillColor="#B45309"
-        android:pathData="M78,191 L95,181 L118,194 L153,168 L178,182 L165,190 L153,184 L120,210 L95,196 L78,206 Z" />
+        android:pathData="M17.4,10.9 L20,12.6"
+        android:strokeColor="#000000"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round" />
 </vector>

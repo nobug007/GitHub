@@ -1,0 +1,16 @@
+PASS: three extended displays detected
+\\.\DISPLAY1 {X=0,Y=0,Width=2880,Height=1800}
+\\.\DISPLAY2 {X=2880,Y=-132,Width=3840,Height=2160}
+\\.\DISPLAY3 {X=6720,Y=-140,Width=3840,Height=2160}
+PASS: three local images decoded
+PASS: one controller and two visible outputs
+PASS: exact physical output bounds 0
+PASS: exact physical output bounds 1
+PASS: main display bounds
+PASS: live monitor reassignment
+PASS: duplicate assignment rejected
+PASS: missing assignment rejected
+PASS: logo-only mode
+PASS: stop hides both outputs
+PASS: restart outputs
+ALL TESTS PASSED

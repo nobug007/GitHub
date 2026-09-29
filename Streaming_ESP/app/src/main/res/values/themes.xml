@@ -1,0 +1,8 @@
+<resources>
+    <!-- 메뉴도 액션바도 없는 전체화면 뷰어. 배경은 검정이라 레터박스 여백이 눈에 띄지 않는다. -->
+    <style name="Theme.StreamingEsp" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:windowBackground">@android:color/black</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowFullscreen">true</item>
+    </style>
+</resources>

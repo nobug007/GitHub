@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Stream</string>
+    <string name="connecting">카메라 연결 중…</string>
+</resources>

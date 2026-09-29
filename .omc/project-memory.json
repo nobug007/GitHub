@@ -1,0 +1,207 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1783145967354,
+  "projectRoot": "/mnt/c/github",
+  "techStack": {
+    "languages": [
+      {
+        "name": "JavaScript/TypeScript",
+        "version": "24.x",
+        "confidence": "high",
+        "markers": [
+          "package.json"
+        ]
+      }
+    ],
+    "frameworks": [],
+    "packageManager": "npm",
+    "runtime": "Node.js 24.x"
+  },
+  "build": {
+    "buildCommand": null,
+    "testCommand": null,
+    "lintCommand": null,
+    "devCommand": null,
+    "scripts": {}
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": null
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [
+      "docs"
+    ],
+    "gitBranches": {
+      "defaultBranch": "main",
+      "branchingStrategy": null
+    }
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "MAG": {
+      "path": "MAG",
+      "purpose": null,
+      "fileCount": 10,
+      "lastAccessed": 1783145966807,
+      "keyFiles": [
+        "AGENTS.md",
+        "README.md",
+        "first-page.png",
+        "package.json",
+        "server-err.log"
+      ]
+    },
+    "SFC": {
+      "path": "SFC",
+      "purpose": null,
+      "fileCount": 7,
+      "lastAccessed": 1783145966829,
+      "keyFiles": [
+        "AGENTS.md",
+        "build.gradle.kts",
+        "gradle.properties",
+        "gradlew",
+        "gradlew.bat"
+      ]
+    },
+    "SFD": {
+      "path": "SFD",
+      "purpose": null,
+      "fileCount": 7,
+      "lastAccessed": 1783145966863,
+      "keyFiles": [
+        "AGENTS.md",
+        "build.gradle.kts",
+        "gradle.properties",
+        "gradlew",
+        "gradlew.bat"
+      ]
+    },
+    "SFD_Test": {
+      "path": "SFD_Test",
+      "purpose": null,
+      "fileCount": 7,
+      "lastAccessed": 1783145966882,
+      "keyFiles": [
+        "AGENTS.md",
+        "build.gradle.kts",
+        "gradle.properties",
+        "gradlew",
+        "gradlew.bat"
+      ]
+    },
+    "SFW": {
+      "path": "SFW",
+      "purpose": null,
+      "fileCount": 7,
+      "lastAccessed": 1783145966910,
+      "keyFiles": [
+        "AGENTS.md",
+        "build.gradle.kts",
+        "gradle.properties",
+        "gradlew",
+        "gradlew.bat"
+      ]
+    },
+    "docs": {
+      "path": "docs",
+      "purpose": "Documentation",
+      "fileCount": 1,
+      "lastAccessed": 1783145966942,
+      "keyFiles": [
+        "중간보고서_수정.md"
+      ]
+    },
+    "safeFinder": {
+      "path": "safeFinder",
+      "purpose": null,
+      "fileCount": 5,
+      "lastAccessed": 1783145966972,
+      "keyFiles": [
+        "AGENTS.md",
+        "README.md",
+        "index.html",
+        "package.json",
+        "vercel.json"
+      ]
+    },
+    "MAG/api": {
+      "path": "MAG/api",
+      "purpose": "API routes",
+      "fileCount": 1,
+      "lastAccessed": 1783145967020,
+      "keyFiles": [
+        "index.js"
+      ]
+    },
+    "MAG/docs": {
+      "path": "MAG/docs",
+      "purpose": "Documentation",
+      "fileCount": 1,
+      "lastAccessed": 1783145967053,
+      "keyFiles": [
+        "ARCHITECTURE.md"
+      ]
+    },
+    "SFC/app": {
+      "path": "SFC/app",
+      "purpose": "Application code",
+      "fileCount": 1,
+      "lastAccessed": 1783145967089,
+      "keyFiles": [
+        "build.gradle.kts"
+      ]
+    },
+    "SFC/build": {
+      "path": "SFC/build",
+      "purpose": "Build output",
+      "fileCount": 0,
+      "lastAccessed": 1783145967125,
+      "keyFiles": []
+    },
+    "SFD/app": {
+      "path": "SFD/app",
+      "purpose": "Application code",
+      "fileCount": 1,
+      "lastAccessed": 1783145967195,
+      "keyFiles": [
+        "build.gradle.kts"
+      ]
+    },
+    "SFD_Test/app": {
+      "path": "SFD_Test/app",
+      "purpose": "Application code",
+      "fileCount": 1,
+      "lastAccessed": 1783145967227,
+      "keyFiles": [
+        "build.gradle.kts"
+      ]
+    },
+    "SFW/app": {
+      "path": "SFW/app",
+      "purpose": "Application code",
+      "fileCount": 1,
+      "lastAccessed": 1783145967279,
+      "keyFiles": [
+        "build.gradle.kts"
+      ]
+    },
+    "safeFinder/api": {
+      "path": "safeFinder/api",
+      "purpose": "API routes",
+      "fileCount": 2,
+      "lastAccessed": 1783145967354,
+      "keyFiles": [
+        "health.js",
+        "readings.js"
+      ]
+    }
+  },
+  "hotPaths": [],
+  "userDirectives": []
+}

@@ -30,7 +30,8 @@ data class WifiStatus(
     val bssid: String,
     val signal: Int,
     val isAttached: Boolean,
-    val hasWifiConnection: Boolean = false
+    val hasWifiConnection: Boolean = false,
+    val wifiEnabled: Boolean = false
 )
 
 data class GpsStatus(

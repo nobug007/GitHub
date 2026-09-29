@@ -25,6 +25,22 @@ class SfdApiClient {
         return if (body.trim().startsWith("[")) JSONArray(body) else JSONArray().put(JSONObject(body))
     }
 
+    /** GET /devices/{id}/config → the `data` object ({deviceId, elderId, safeZones[...]}). */
+    fun getConfig(deviceId: String): JSONObject {
+        val root = JSONObject(getText("https://sf-api.ese-lab.com/api/v1/devices/$deviceId/config"))
+        return root.optJSONObject("data") ?: root
+    }
+
+    /** The highest telemetry seq the server already recorded for this device (0 if none/unknown). */
+    fun getLatestSeq(deviceId: String): Int = runCatching {
+        val root = JSONObject(getText("https://sf-api.ese-lab.com/api/v1/devices/$deviceId/logs?size=5"))
+        val logs = root.optJSONObject("data")?.optJSONArray("logs") ?: return 0
+        var max = 0
+        for (i in 0 until logs.length()) max = maxOf(max, logs.optJSONObject(i)?.optInt("seq", 0) ?: 0)
+        max
+    }.getOrDefault(0)
+
+
     private fun postJson(urlText: String, body: String): ApiResult {
         val connection = (URL(urlText).openConnection() as HttpURLConnection).apply {
             requestMethod = "POST"

@@ -62,10 +62,13 @@ class BlePeripheralManager(
     private val gattCallback = object : BluetoothGattServerCallback() {
         override fun onConnectionStateChange(device: BluetoothDevice, status: Int, newState: Int) {
             val connected = newState == BluetoothGatt.STATE_CONNECTED
-            val name = device.name ?: device.address ?: "SFC"
-            store.saveBleSafeZone(connected, device.address ?: "", name)
+            val name = device.name ?: device.address ?: "BLE central"
+            // A raw GATT connection is NOT proximity-safe on its own: any central (including a PC
+            // test harness) can connect while the device is genuinely away. The "보호자 근접" safe
+            // zone is owned solely by the hotspot-join path (connectivityTick); here we only surface
+            // the connection for UI/logging so a BLE link never masks a real exit.
             onConnectionChanged(connected, name)
-            onStatus("SFC ${device.address} ${if (connected) "connected" else "disconnected"}")
+            onStatus("BLE central ${device.address} ${if (connected) "connected" else "disconnected"}")
         }
 
         override fun onCharacteristicReadRequest(
@@ -290,6 +293,10 @@ class BlePeripheralManager(
         }
         return JSONObject()
             .put("deviceId", config.optString("deviceId", SfdConfig.DEFAULT_DEVICE_ID))
+            // Spec B-1 requires elderId + fwVersion at registration; the remaining fields stay as
+            // the provisioning extras this server already consumes.
+            .put("elderId", config.optString("elderId"))
+            .put("fwVersion", SfdConfig.FW_VERSION)
             .put("elderName", config.optString("elderName", "elder"))
             .put("guardian", config.optJSONObject("guardian") ?: JSONObject())
             .put("safeZones", registerZones)

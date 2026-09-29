@@ -1,7 +1,9 @@
 R_DEF: Internal format may change without notice
 local
+drawable ic_back
 drawable ic_gps_moving
 drawable ic_home_zone
+drawable ic_menu_more
 drawable ic_safe_finder
 drawable ic_sos_status
 string app_name

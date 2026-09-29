@@ -1,0 +1,7 @@
+{
+  "tool_name": "Bash",
+  "tool_input_preview": "{\"command\":\"ls -la /mnt/c/github/docs 2>&1\",\"timeout\":15000,\"description\":\"Check if a root-level docs folder already exists\"}",
+  "error": "Exit code 2\nls: cannot access '/mnt/c/github/docs': No such file or directory",
+  "timestamp": "2026-07-04T05:54:27.868Z",
+  "retry_count": 1
+}

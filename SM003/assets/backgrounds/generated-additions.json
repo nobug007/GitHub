@@ -1,0 +1,13 @@
+{
+  "tool": "built-in image_gen",
+  "images": [
+    {
+      "file": "snow.png",
+      "prompt": "Generate a photorealistic wide 16:9 nature landscape background for a dog photography studio projector. Quiet snow meadow surrounded by frosted evergreen trees, distant snowy mountains, soft pastel winter sunrise, realistic detailed snow textures, calm uncluttered foreground for projecting behind a dog. Full bleed landscape photo. No animals, people, text, logos, borders. Save the generated image."
+    },
+    {
+      "file": "bamboo.png",
+      "prompt": "Generate a photorealistic wide 16:9 nature landscape background for a dog photography studio projector. Peaceful lush green bamboo grove in Korea with a small mossy clearing in foreground and a gently curving natural path, filtered warm morning sunlight through tall bamboo, realistic foliage, inviting tranquil atmosphere. Full bleed landscape photo. No animals, people, text, logos, borders. Save the generated image."
+    }
+  ]
+}

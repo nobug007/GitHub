@@ -12,10 +12,12 @@ import android.bluetooth.le.AdvertiseCallback
 import android.bluetooth.le.AdvertiseData
 import android.bluetooth.le.AdvertiseSettings
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.ParcelUuid
 import org.json.JSONObject
+import java.io.ByteArrayOutputStream
 import java.time.Instant
 import java.util.UUID
 
@@ -30,7 +32,8 @@ class BleConfigServer(
     private val apiClient = SfwApiClient()
     private var gattServer: BluetoothGattServer? = null
     private var running = false
-    private val incomingConfig = StringBuilder()
+    private val incomingConfig = ByteArrayOutputStream()
+    private var isReceivingConfig = false
     private var expectedConfigBytes: Int? = null
     private var receivedConfigBytes = 0
     private var lastStatus = "Idle"
@@ -73,42 +76,65 @@ class BleConfigServer(
                 return
             }
 
-            val chunk = value.toString(Charsets.UTF_8)
+            // Decode only for marker detection; payload bytes are accumulated raw and
+            // decoded to UTF-8 once when the transfer completes (multi-byte safe).
+            val marker = value.toString(Charsets.UTF_8)
             when {
-                chunk.startsWith("BEGIN:") -> {
-                    incomingConfig.clear()
-                    expectedConfigBytes = chunk.removePrefix("BEGIN:").trim().toIntOrNull()
+                marker.startsWith("BEGIN:") -> {
+                    incomingConfig.reset()
+                    expectedConfigBytes = marker.removePrefix("BEGIN:").trim().toIntOrNull()
                     receivedConfigBytes = 0
+                    isReceivingConfig = true
                     updateStatus("Receiving config 0/${expectedConfigBytes ?: "?"} bytes")
                     sendWriteResponse(device, requestId, responseNeeded, BluetoothGatt.GATT_SUCCESS)
                     return
                 }
-                chunk == "END" -> {
-                    trySaveCompleteJson(force = true)
+                marker == "END" -> {
+                    if (isReceivingConfig) {
+                        isReceivingConfig = false
+                        val expected = expectedConfigBytes
+                        if (expected != null && incomingConfig.size() != expected) {
+                            registrationState = "FAILED"
+                            updateStatus("Config length mismatch: ${incomingConfig.size()}/$expected bytes")
+                            incomingConfig.reset()
+                            expectedConfigBytes = null
+                            receivedConfigBytes = 0
+                        } else {
+                            trySaveCompleteJson(force = true)
+                        }
+                    }
+                    // If a config was already accepted mid-stream (buffer consumed),
+                    // END is a no-op acknowledgement.
                     sendWriteResponse(device, requestId, responseNeeded, BluetoothGatt.GATT_SUCCESS)
                     return
                 }
-                offset == 0 && looksLikeJsonStart(chunk) -> {
-                    incomingConfig.clear()
+                !isReceivingConfig && offset == 0 && looksLikeJsonStart(marker) -> {
+                    // BEGIN-less raw JSON fallback: only when idle, never mid-transfer.
+                    incomingConfig.reset()
                     expectedConfigBytes = null
                     receivedConfigBytes = 0
+                    isReceivingConfig = true
                 }
             }
 
-            incomingConfig.append(chunk)
+            incomingConfig.write(value)
             receivedConfigBytes += value.size
             updateStatus("Receiving config $receivedConfigBytes/${expectedConfigBytes ?: "?"} bytes")
 
-            if (incomingConfig.length > MAX_CONFIG_BYTES) {
-                incomingConfig.clear()
+            if (incomingConfig.size() > MAX_CONFIG_BYTES) {
+                incomingConfig.reset()
                 expectedConfigBytes = null
                 receivedConfigBytes = 0
+                isReceivingConfig = false
                 updateStatus("Config too large")
                 sendWriteResponse(device, requestId, responseNeeded, BluetoothGatt.GATT_INVALID_ATTRIBUTE_LENGTH)
                 return
             }
 
-            trySaveCompleteJson(force = false)
+            val expected = expectedConfigBytes
+            if (expected == null || receivedConfigBytes >= expected) {
+                trySaveCompleteJson(force = false)
+            }
             sendWriteResponse(device, requestId, responseNeeded, BluetoothGatt.GATT_SUCCESS)
         }
     }
@@ -148,7 +174,8 @@ class BleConfigServer(
 
         stop()
         runCatching { adapter.name = SfwConfig.BLE_DEVICE_NAME }
-        incomingConfig.clear()
+        incomingConfig.reset()
+        isReceivingConfig = false
         expectedConfigBytes = null
         receivedConfigBytes = 0
         configReceived = false
@@ -217,14 +244,30 @@ class BleConfigServer(
     private fun looksLikeJsonStart(value: String): Boolean = value.trimStart().startsWith("{")
 
     private fun trySaveCompleteJson(force: Boolean) {
-        val json = incomingConfig.toString().trim()
+        val json = incomingConfig.toByteArray().toString(Charsets.UTF_8).trim()
         if (!json.startsWith("{") || !json.endsWith("}")) {
             if (force) updateStatus("Config receive incomplete")
             return
         }
 
         runCatching { JSONObject(json) }
-            .onSuccess {
+            .onSuccess { obj ->
+                incomingConfig.reset()
+                isReceivingConfig = false
+                expectedConfigBytes = null
+                receivedConfigBytes = 0
+
+                // A later "safeZoneUpdate" (zone add/edit/remove from SFC) must be MERGED into the
+                // existing config — not saved as the whole config, which would wipe the provisioning
+                // data and drop the device out of operational mode. The zone is already on the
+                // server (SFC created it), so no re-registration is needed here.
+                if (obj.optString("messageType").equals("safeZoneUpdate", ignoreCase = true)) {
+                    val applied = SfwStore(context).applySafeZoneUpdate(json)
+                    updateStatus(if (applied) "Safe zone update applied" else "Safe zone update ignored")
+                    if (applied) startOperationalService()
+                    return@onSuccess
+                }
+
                 context.getSharedPreferences(SfwConfig.PREFS_NAME, Context.MODE_PRIVATE)
                     .edit()
                     .putString(SfwConfig.PREF_CONFIG_JSON, json)
@@ -235,9 +278,6 @@ class BleConfigServer(
                 serverStatusCode = null
                 serverResponseBody = ""
                 updateStatus("Config synced. Registering server...")
-                incomingConfig.clear()
-                expectedConfigBytes = null
-                receivedConfigBytes = 0
                 registerConfigWithServer(json)
             }
             .onFailure {
@@ -257,6 +297,9 @@ class BleConfigServer(
                         else -> "FAILED"
                     }
                     updateStatus("Server register $registrationState (${result.responseCode})")
+                    if (registrationState == "REGISTERED" || registrationState == "ALREADY_REGISTERED") {
+                        startOperationalService()
+                    }
                 }
                 .onFailure { error ->
                     serverStatusCode = null
@@ -265,6 +308,17 @@ class BleConfigServer(
                     updateStatus("Server register failed")
                 }
         }.start()
+    }
+
+    // Registration succeeded (or the device was already known): switch to the
+    // SFD-style operational loop. Deliberately does not touch lastStatus on
+    // success so SFC still reads the register ack it expects.
+    private fun startOperationalService() {
+        runCatching {
+            context.startForegroundService(Intent(context, SfwTelemetryService::class.java))
+        }.onFailure {
+            SfwStore(context).appendLog("Telemetry service start failed: ${it.message ?: it.javaClass.simpleName}")
+        }
     }
 
     private fun statusJson(): String {
@@ -276,7 +330,7 @@ class BleConfigServer(
             .put("ackMessage", lastStatus)
             .put("registrationState", registrationState)
             .put("serverStatusCode", serverStatusCode ?: JSONObject.NULL)
-            .put("serverResponseBody", serverResponseBody)
+            .put("serverResponseBody", serverResponseBody.take(180))
             .put("updatedAt", updatedAt)
             .toString()
     }

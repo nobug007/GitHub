@@ -1,28 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- 선화 스타일. 색은 코드에서 상태에 맞게 tint 한다. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="256dp"
-    android:height="256dp"
-    android:viewportWidth="256"
-    android:viewportHeight="256">
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="#000000">
     <path
-        android:fillColor="#0FA34A"
-        android:pathData="M128,128m-118,0a118,118 0,1 1,236 0a118,118 0,1 1,-236 0" />
+        android:pathData="M3.5,10.6 L12,3.6 L20.5,10.6"
+        android:strokeColor="#000000"
+        android:strokeWidth="1.7"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
     <path
-        android:fillColor="#94E86E"
-        android:pathData="M54,126 L128,58 L202,126 L187,142 L187,196 L69,196 L69,142 Z" />
+        android:pathData="M5.6,9.4 L5.6,19 A1,1 0,0 0 6.6,20 L17.4,20 A1,1 0,0 0 18.4,19 L18.4,9.4"
+        android:strokeColor="#000000"
+        android:strokeWidth="1.7"
+        android:strokeLineJoin="round" />
     <path
-        android:fillColor="#B9F48C"
-        android:pathData="M82,130 L128,88 L174,130 L164,142 L128,109 L92,142 Z" />
-    <path
-        android:fillColor="#5CC54B"
-        android:pathData="M104,147 Q128,129 152,147 L144,158 Q128,147 112,158 Z" />
-    <path
-        android:fillColor="#2F9E44"
-        android:pathData="M89,166 Q128,134 167,166 L157,179 Q128,154 99,179 Z" />
-    <path
-        android:fillColor="#0B7C38"
-        android:pathData="M113,183 A15,15 0,1 0 143,183 A15,15 0,1 0 113,183" />
-    <path
-        android:fillColor="#6DD45F"
-        android:pathData="M163,85 L183,85 L183,116 L163,98 Z" />
+        android:pathData="M9.9,20 L9.9,14.9 A2.1,2.1 0,0 1 14.1,14.9 L14.1,20"
+        android:strokeColor="#000000"
+        android:strokeWidth="1.7"
+        android:strokeLineJoin="round" />
 </vector>

@@ -1,0 +1,10 @@
+[
+    {
+        "merged": "com.sf.sfw.app-debug-4:/drawable_ic_safe_finder.png.flat",
+        "source": "com.sf.sfw.app-main-6:/drawable/ic_safe_finder.png"
+    },
+    {
+        "merged": "C:\\Users\\nobug\\.gradle\\daemon\\8.12\\com.sf.sfw.app-debug-4:\\drawable_sf_logo.png.flat",
+        "source": "C:\\Users\\nobug\\.gradle\\daemon\\8.12\\com.sf.sfw.app-main-6:\\drawable\\sf_logo.png"
+    }
+]
