@@ -1,0 +1,114 @@
+/*
+  Canon EOS R5 Mark II BLE shutter remote
+  Button: GPIO0 --- tact switch --- GND
+
+  Power on while holding the button: enter camera pairing mode.
+  Normal use: one shutter command per press, at least 2 seconds apart.
+
+  ESP32-C6 / Push button / TP4056 / 3.7V 1000mA / SS12D00 Switch / 3mm green LED
+  Bang Hyosik : nobug007@gmail.com
+ 
+*/
+
+#include <Arduino.h>
+#include <CanonBLERemote.h>
+
+constexpr uint8_t SHUTTER_PIN = 0;   
+constexpr uint32_t DEBOUNCE_MS = 50;
+constexpr uint32_t PAIR_SCAN_SECONDS = 10;
+constexpr uint32_t SHUTTER_INTERVAL_MS = 2000;
+
+CanonBLERemote cameraRemote("C6 Canon Remote");
+
+
+bool stableButtonState = HIGH;
+bool lastReading = HIGH;
+uint32_t lastChangeMs = 0;
+
+void waitForButtonRelease() {
+  uint32_t releasedSince = millis();
+  while ((uint32_t)(millis() - releasedSince) < DEBOUNCE_MS) {
+    if (digitalRead(SHUTTER_PIN) == LOW) {
+      releasedSince = millis();
+    }
+    delay(2);
+  }
+  stableButtonState = HIGH;
+  lastReading = HIGH;
+  lastChangeMs = millis();
+}
+
+void pairWithCamera() {
+//  setStatusLedInterval(PAIRING_LED_INTERVAL_MS);
+  Serial.println("PAIRING MODE");
+  Serial.println("Open the camera's BR-E1 pairing screen now.");
+
+  uint32_t attempt = 0;
+  while (true) {
+    ++attempt;
+    const uint32_t startedMs = millis();
+    Serial.printf("[PAIR APP v3] attempt=%lu START\n", (unsigned long)attempt);
+    const bool ok = cameraRemote.pair(PAIR_SCAN_SECONDS);
+    Serial.printf("[PAIR APP] attempt=%lu result=%s elapsed=%lu ms error=%s\n",
+                  (unsigned long)attempt, ok ? "OK" : "FAILED",
+                  (unsigned long)(millis() - startedMs), cameraRemote.getLastPairError());
+    if (ok) {
+      break;
+    }
+    Serial.println("[PAIR APP] retrying in 500 ms");
+    delay(500);
+  }
+
+  Serial.println("Pairing request sent and connection checked. Confirm registration on camera, then release the button.");
+}
+
+void setup() {
+  pinMode(SHUTTER_PIN, INPUT_PULLUP);
+  pinMode(LED_BUILTIN, OUTPUT);
+  delay(DEBOUNCE_MS);
+  Serial.begin(115200);
+  delay(300);
+
+  const bool pairOnBoot = digitalRead(SHUTTER_PIN) == LOW;
+
+  cameraRemote.init();
+  delay(500);
+
+  if (pairOnBoot) {
+    pairWithCamera();
+  } else {
+    Serial.printf("Paired camera: %s\n", cameraRemote.getPairedAddressString().c_str());
+  }
+ 
+  waitForButtonRelease();
+  Serial.println("READY");
+}
+
+void loop() {
+  const uint32_t now = millis();
+  const bool reading = digitalRead(SHUTTER_PIN);
+
+  if (reading != lastReading) {
+    lastChangeMs = now;
+    lastReading = reading;
+  }
+
+  if ((uint32_t)(now - lastChangeMs) >= DEBOUNCE_MS &&
+      reading != stableButtonState) {
+    stableButtonState = reading;
+
+    if (stableButtonState == LOW) {
+      const uint32_t triggerStartedMs = millis();
+      Serial.printf("[APP] trigger START uptime=%lu ms\n", (unsigned long)triggerStartedMs);
+      const bool sent = cameraRemote.trigger();
+      Serial.printf("[APP] trigger END result=%s elapsed=%lu ms\n",
+                    sent ? "OK" : "FAILED", (unsigned long)(millis() - triggerStartedMs));
+      if (sent) {
+        Serial.println("Shot command sent");
+      } else {
+        Serial.println("ERROR: camera connection/trigger failed");
+      }
+      delay(SHUTTER_INTERVAL_MS);
+    }
+  }
+}

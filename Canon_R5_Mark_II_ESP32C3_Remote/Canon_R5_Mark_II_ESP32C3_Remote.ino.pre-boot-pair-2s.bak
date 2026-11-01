@@ -1,0 +1,97 @@
+/*
+  Canon EOS R5 Mark II BLE shutter remote
+  Button: GPIO1 --- tact switch --- GND
+
+  Short press/release: release shutter once
+  Hold for 20 seconds: enter camera pairing mode without a power cycle
+*/
+
+#include <Arduino.h>
+#include <CanonBLERemote.h>
+
+constexpr uint8_t SHUTTER_PIN = 0;
+constexpr uint32_t DEBOUNCE_MS = 35;
+constexpr uint32_t PAIR_HOLD_MS = 5000;
+constexpr uint32_t PAIR_SCAN_SECONDS = 10;
+
+CanonBLERemote cameraRemote("ESP32-C3 Canon Remote");
+
+bool stableButtonState = HIGH;
+bool lastReading = HIGH;
+bool pressActive = false;
+uint32_t lastChangeMs = 0;
+uint32_t pressStartedMs = 0;
+
+void pairWithCamera() {
+  Serial.println("PAIRING MODE");
+  Serial.println("Open the camera's BR-E1 pairing screen now.");
+
+  while (!cameraRemote.pair(PAIR_SCAN_SECONDS)) {
+    Serial.println("Camera not found. Retrying...");
+    delay(500);
+  }
+
+  Serial.println("Pairing completed.");
+
+  // Require release before accepting another press; do not take a photo.
+  while (digitalRead(SHUTTER_PIN) == LOW) {
+    delay(10);
+  }
+  stableButtonState = HIGH;
+  lastReading = HIGH;
+  pressActive = false;
+  lastChangeMs = millis();
+}
+
+void setup() {
+  Serial.begin(115200);
+  delay(300);
+
+  pinMode(SHUTTER_PIN, INPUT_PULLUP);
+  cameraRemote.init();
+  delay(500);
+
+  Serial.println("READY - short press/release to take a picture.");
+  Serial.println("Hold the button for 20 seconds to pair a camera.");
+}
+
+void loop() {
+  const uint32_t now = millis();
+  const bool reading = digitalRead(SHUTTER_PIN);
+
+  if (reading != lastReading) {
+    lastChangeMs = now;
+    lastReading = reading;
+  }
+
+  if ((uint32_t)(now - lastChangeMs) >= DEBOUNCE_MS &&
+      reading != stableButtonState) {
+    stableButtonState = reading;
+
+    if (stableButtonState == LOW) {
+      pressActive = true;
+      pressStartedMs = lastChangeMs;
+    } else if (pressActive) {
+      pressActive = false;
+      // Use the release edge time so debounce does not extend the hold.
+      if ((uint32_t)(lastChangeMs - pressStartedMs) >= PAIR_HOLD_MS) {
+        pairWithCamera();
+      } else {
+        Serial.println("Shutter released");
+        if (cameraRemote.trigger()) {
+          Serial.println("Shot command sent");
+        } else {
+          Serial.println("ERROR: camera connection/trigger failed");
+        }
+      }
+    }
+  }
+
+  if (pressActive && stableButtonState == LOW && reading == LOW &&
+      (uint32_t)(now - pressStartedMs) >= PAIR_HOLD_MS) {
+    pressActive = false;
+    pairWithCamera();
+  }
+
+  delay(2);
+}

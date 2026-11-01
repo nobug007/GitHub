@@ -1,0 +1,150 @@
+/*
+  Canon EOS R5 Mark II BLE shutter remote
+  Button: GPIO0 --- tact switch --- GND
+
+  Power on while holding the button: enter camera pairing mode.
+  Normal use: one shutter command per press, at least 2 seconds apart.
+
+  ESP32-C6 / Push button / TP4056 / 3.7V 1000mA / SS12D00 Switch / 3mm green LED
+  Bang Hyosik : nobug007@gmail.com
+ 
+*/
+
+#include <Arduino.h>
+#include <CanonBLERemote.h>
+
+constexpr uint8_t SHUTTER_PIN = 0;   
+constexpr uint32_t DEBOUNCE_MS = 50;
+constexpr uint32_t PAIR_SCAN_SECONDS = 10;
+constexpr uint32_t SHUTTER_INTERVAL_MS = 2000;
+constexpr uint32_t RECONNECT_INTERVAL_MS = 10000;   // retry the camera link every 10 s while idle
+uint32_t lastConnectTryMs = 0;
+bool lastLinkState = false;
+
+// Status LED (XIAO ESP32C6: LED_BUILTIN = GPIO15, lights when LOW)
+constexpr bool LED_ACTIVE_LOW = true;
+void ledSet(bool on) { digitalWrite(LED_BUILTIN, (on ^ LED_ACTIVE_LOW) ? HIGH : LOW); }
+
+CanonBLERemote cameraRemote("C6 Canon Remote");
+
+
+bool stableButtonState = HIGH;
+bool lastReading = HIGH;
+uint32_t lastChangeMs = 0;
+
+void waitForButtonRelease() {
+  uint32_t releasedSince = millis();
+  while ((uint32_t)(millis() - releasedSince) < DEBOUNCE_MS) {
+    if (digitalRead(SHUTTER_PIN) == LOW) {
+      releasedSince = millis();
+    }
+    delay(2);
+  }
+  stableButtonState = HIGH;
+  lastReading = HIGH;
+  lastChangeMs = millis();
+}
+
+void pairWithCamera() {
+//  setStatusLedInterval(PAIRING_LED_INTERVAL_MS);
+  Serial.println("PAIRING MODE");
+  Serial.println("Open the camera's BR-E1 pairing screen now.");
+
+  uint32_t attempt = 0;
+  while (true) {
+    ++attempt;
+    const uint32_t startedMs = millis();
+    Serial.printf("[PAIR APP v3] attempt=%lu START\n", (unsigned long)attempt);
+    ledSet(attempt & 1);   // LED toggles on every pairing attempt
+    const bool ok = cameraRemote.pair(PAIR_SCAN_SECONDS);
+    Serial.printf("[PAIR APP] attempt=%lu result=%s elapsed=%lu ms error=%s\n",
+                  (unsigned long)attempt, ok ? "OK" : "FAILED",
+                  (unsigned long)(millis() - startedMs), cameraRemote.getLastPairError());
+    if (ok) {
+      break;
+    }
+    Serial.println("[PAIR APP] retrying in 500 ms");
+    delay(500);
+  }
+
+  Serial.println("Pairing request sent and connection checked. Confirm registration on camera, then release the button.");
+}
+
+void setup() {
+  pinMode(SHUTTER_PIN, INPUT_PULLUP);
+  pinMode(LED_BUILTIN, OUTPUT);
+  ledSet(false);
+  delay(DEBOUNCE_MS);
+  Serial.begin(115200);
+#if ARDUINO_USB_CDC_ON_BOOT && ARDUINO_USB_MODE
+  // Without a PC, every Serial.print on the USB-CDC port blocks until a timeout.
+  // With this many log lines that stalls the BLE timing (connect/pair windows) -> fails on battery.
+  Serial.setTxTimeoutMs(0);
+#endif
+  delay(300);
+
+  const bool pairOnBoot = digitalRead(SHUTTER_PIN) == LOW;
+
+  cameraRemote.init();
+  delay(500);
+
+  if (pairOnBoot) {
+    pairWithCamera();
+  } else {
+    Serial.printf("Paired camera: %s\n", cameraRemote.getPairedAddressString().c_str());
+  }
+ 
+  waitForButtonRelease();
+  Serial.println("READY - connecting to camera...");
+  // Connect right away (like the real BR-E1) so the camera shows the remote as connected.
+  lastLinkState = cameraRemote.ensureConnected();
+  lastConnectTryMs = millis();
+  Serial.println(lastLinkState ? "[LINK] camera connected" : "[LINK] camera not reachable - will retry");
+  Serial.printf("[BUTTON] GPIO%u idle level = %s (should be HIGH)\n", SHUTTER_PIN,
+                digitalRead(SHUTTER_PIN) == HIGH ? "HIGH" : "LOW");
+}
+
+void loop() {
+  const uint32_t now = millis();
+
+  // Keep the link up while idle; report changes.
+  const bool linked = cameraRemote.isConnected();
+  if (linked != lastLinkState) {
+    lastLinkState = linked;
+    Serial.println(linked ? "[LINK] camera connected" : "[LINK] camera disconnected");
+  }
+  ledSet(linked);   // LED on = connected to the camera
+  if (!linked && (uint32_t)(now - lastConnectTryMs) >= RECONNECT_INTERVAL_MS &&
+      digitalRead(SHUTTER_PIN) == HIGH) {
+    lastConnectTryMs = now;
+    cameraRemote.ensureConnected();
+  }
+  const bool reading = digitalRead(SHUTTER_PIN);
+
+  if (reading != lastReading) {
+    lastChangeMs = now;
+    lastReading = reading;
+  }
+
+  if ((uint32_t)(now - lastChangeMs) >= DEBOUNCE_MS &&
+      reading != stableButtonState) {
+    stableButtonState = reading;
+
+    Serial.printf("[BUTTON] %s\n", stableButtonState == LOW ? "pressed" : "released");
+    if (stableButtonState == LOW) {
+      const uint32_t triggerStartedMs = millis();
+      Serial.printf("[APP] trigger START uptime=%lu ms\n", (unsigned long)triggerStartedMs);
+      const bool sent = cameraRemote.trigger();
+      Serial.printf("[APP] trigger END result=%s elapsed=%lu ms\n",
+                    sent ? "OK" : "FAILED", (unsigned long)(millis() - triggerStartedMs));
+      if (sent) {
+        Serial.println("Shot command sent");
+        ledSet(false); delay(150); ledSet(true);   // short blink = shot sent
+      } else {
+        Serial.println("ERROR: camera connection/trigger failed");
+        for (int i = 0; i < 3; ++i) { ledSet(true); delay(100); ledSet(false); delay(100); }  // 3 blinks = failed
+      }
+      delay(SHUTTER_INTERVAL_MS);
+    }
+  }
+}

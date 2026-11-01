@@ -1,0 +1,62 @@
+[
+  {
+    "id": "flowers",
+    "name": "봄꽃 정원",
+    "mode": "built-in image_gen",
+    "prompt": "Use case: photorealistic-natural. Asset type: full screen photographic studio projector backdrop for pet portraits. Create one beautiful high resolution landscape image 16:9, a lush spring flower garden with pastel pink blossoms and white daisies framing an open grassy center. Realistic editorial landscape photography, gentle balanced light, fine natural detail. Composition: uncluttered lower center for a real dog standing in front of the projected backdrop. No animals, people, buildings, text, letters, logos, watermarks or border. This is a complete single landscape image, not a collage."
+  },
+  {
+    "id": "forest",
+    "name": "햇살 숲",
+    "mode": "built-in image_gen",
+    "prompt": "Use case: photorealistic-natural. Asset type: full screen photographic studio projector backdrop for pet portraits. Create one beautiful high resolution landscape image 16:9, a tranquil green forest clearing, tall trees framing both sides, dappled morning sunlight. Realistic editorial landscape photography, gentle balanced light, fine natural detail. Composition: uncluttered lower center for a real dog standing in front of the projected backdrop. No animals, people, buildings, text, letters, logos, watermarks or border. This is a complete single landscape image, not a collage."
+  },
+  {
+    "id": "mountains",
+    "name": "푸른 산",
+    "mode": "built-in image_gen",
+    "prompt": "Use case: photorealistic-natural. Asset type: full screen photographic studio projector backdrop for pet portraits. Create one beautiful high resolution landscape image 16:9, majestic layered blue alpine mountains, a quiet grassy valley foreground, soft clouds. Realistic editorial landscape photography, gentle balanced light, fine natural detail. Composition: uncluttered lower center for a real dog standing in front of the projected backdrop. No animals, people, buildings, text, letters, logos, watermarks or border. This is a complete single landscape image, not a collage."
+  },
+  {
+    "id": "space",
+    "name": "별빛 우주",
+    "mode": "built-in image_gen",
+    "prompt": "Use case: photorealistic-natural. Asset type: full screen photographic studio projector backdrop for pet portraits. Create one beautiful high resolution landscape image 16:9, a beautiful deep blue and violet nebula with subtle stars, ethereal natural astrophotography, no planets in foreground. Realistic editorial landscape photography, gentle balanced light, fine natural detail. Composition: uncluttered lower center for a real dog standing in front of the projected backdrop. No animals, people, buildings, text, letters, logos, watermarks or border. This is a complete single landscape image, not a collage."
+  },
+  {
+    "id": "river",
+    "name": "맑은 강",
+    "mode": "built-in image_gen",
+    "prompt": "Use case: photorealistic-natural. Asset type: full screen photographic studio projector backdrop for pet portraits. Create one beautiful high resolution landscape image 16:9, a clear winding river bordered by soft green trees and smooth pebbles in morning light. Realistic editorial landscape photography, gentle balanced light, fine natural detail. Composition: uncluttered lower center for a real dog standing in front of the projected backdrop. No animals, people, buildings, text, letters, logos, watermarks or border. This is a complete single landscape image, not a collage."
+  },
+  {
+    "id": "ocean",
+    "name": "푸른 바다",
+    "mode": "built-in image_gen",
+    "prompt": "Use case: photorealistic-natural. Asset type: full screen photographic studio projector backdrop for pet portraits. Create one beautiful high resolution landscape image 16:9, a tranquil turquoise ocean with gentle small waves and a pristine pale sand foreground. Realistic editorial landscape photography, gentle balanced light, fine natural detail. Composition: uncluttered lower center for a real dog standing in front of the projected backdrop. No animals, people, buildings, text, letters, logos, watermarks or border. This is a complete single landscape image, not a collage."
+  },
+  {
+    "id": "lavender",
+    "name": "라벤더 들판",
+    "mode": "built-in image_gen",
+    "prompt": "Use case: photorealistic-natural. Asset type: full screen photographic studio projector backdrop for pet portraits. Create one beautiful high resolution landscape image 16:9, a lavender field at soft sunrise with purple flowers framing a clear grassy center. Realistic editorial landscape photography, gentle balanced light, fine natural detail. Composition: uncluttered lower center for a real dog standing in front of the projected backdrop. No animals, people, buildings, text, letters, logos, watermarks or border. This is a complete single landscape image, not a collage."
+  },
+  {
+    "id": "autumn",
+    "name": "가을 숲",
+    "mode": "built-in image_gen",
+    "prompt": "Use case: photorealistic-natural. Asset type: full screen photographic studio projector backdrop for pet portraits. Create one beautiful high resolution landscape image 16:9, a golden autumn woodland clearing with amber and red leaves, warm gentle light. Realistic editorial landscape photography, gentle balanced light, fine natural detail. Composition: uncluttered lower center for a real dog standing in front of the projected backdrop. No animals, people, buildings, text, letters, logos, watermarks or border. This is a complete single landscape image, not a collage."
+  },
+  {
+    "id": "waterfall",
+    "name": "숲속 폭포",
+    "mode": "built-in image_gen",
+    "prompt": "Use case: photorealistic-natural. Asset type: full screen photographic studio projector backdrop for pet portraits. Create one beautiful high resolution landscape image 16:9, an elegant forest waterfall flowing into a tranquil teal pool surrounded by moss. Realistic editorial landscape photography, gentle balanced light, fine natural detail. Composition: uncluttered lower center for a real dog standing in front of the projected backdrop. No animals, people, buildings, text, letters, logos, watermarks or border. This is a complete single landscape image, not a collage."
+  },
+  {
+    "id": "sunset",
+    "name": "노을 호수",
+    "mode": "built-in image_gen",
+    "prompt": "Use case: photorealistic-natural. Asset type: full screen photographic studio projector backdrop for pet portraits. Create one beautiful high resolution landscape image 16:9, a peaceful lake reflecting a peach and lavender sunset with distant mountains. Realistic editorial landscape photography, gentle balanced light, fine natural detail. Composition: uncluttered lower center for a real dog standing in front of the projected backdrop. No animals, people, buildings, text, letters, logos, watermarks or border. This is a complete single landscape image, not a collage."
+  }
+]

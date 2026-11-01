@@ -1,0 +1,228 @@
+/*
+  Canon EOS R5 Mark II BLE shutter remote
+  Button: GPIO0 --- tact switch --- GND
+
+  - Pairing : hold the button while switching on, keep holding ~1.5 s (LED blinks fast -> solid).
+  - Shutter : press any time. A press made while still connecting is remembered and fires
+              as soon as the camera link is ready (no more "wait 5 s after power-on").
+
+  LED: fast blink = deciding pairing / blinking per attempt = pairing,
+       solid = connected, off = not connected,
+       short off-blink = shot sent, 3 blinks = failed.
+
+  ESP32-C6 / Push button / TP4056 / 3.7V 1000mA / SS12D00 Switch / 3mm green LED
+  Bang Hyosik : nobug007@gmail.com
+*/
+
+#include <Arduino.h>
+#include <CanonBLERemote.h>
+
+// Debug output. 0 = silent (default), 1 = print [BUTTON]/[LINK]/[APP] messages.
+// (Library trace: CANON_BLE_DEBUG in CanonBLERemote.cpp. ESP-IDF logs: Tools > Core Debug Level > None.)
+#define APP_DEBUG 0
+#if APP_DEBUG
+#define APP_PRINTF(...) Serial.printf(__VA_ARGS__)
+#define APP_PRINTLN(x)  Serial.println(x)
+#else
+#define APP_PRINTF(...) do { } while (0)
+#define APP_PRINTLN(x)  do { } while (0)
+#endif
+
+constexpr uint8_t  SHUTTER_PIN            = 0;
+constexpr uint32_t DEBOUNCE_MS            = 30;     // used only at boot / after pairing
+constexpr uint32_t PRESS_STABLE_MS        = 20;     // a press counts only if LOW for >= 20 ms
+constexpr uint32_t RELEASE_STABLE_MS      = 50;     // a new press is accepted only after >= 50 ms released
+constexpr uint32_t PAIR_HOLD_MS           = 1500;   // hold this long at power-on to pair
+constexpr uint32_t PAIR_SCAN_SECONDS      = 10;
+constexpr uint32_t SHUTTER_INTERVAL_MS    = 1000;   // minimum gap between shots
+constexpr uint32_t RECONNECT_INTERVAL_MS  = 3000;   // retry the camera link while idle
+constexpr uint32_t PENDING_PRESS_MAX_MS   = 15000;  // forget a queued press after this
+
+// Status LED (XIAO ESP32C6: LED_BUILTIN = GPIO15, lights when LOW)
+constexpr bool LED_ACTIVE_LOW = true;
+void ledSet(bool on) { digitalWrite(LED_BUILTIN, (on ^ LED_ACTIVE_LOW) ? HIGH : LOW); }
+
+CanonBLERemote cameraRemote("C6 Canon Remote");
+
+// ---- button: interrupt-driven, bounce-proof ----
+// The old FALLING-only interrupt also caught the contact bounce when the button was RELEASED
+// (HIGH->LOW->HIGH glitch) and counted it as a new press -> an extra, unwanted shot.
+// Now:
+//  * a LOW edge starts a "candidate" press only if the button had been released for >= 50 ms
+//    (so release bounce can never start a press)
+//  * the candidate becomes a real press once it has been LOW for >= 20 ms
+//    - checked in loop() while the button is still held (fires on press, not on release), or
+//    - checked by the interrupt at release time if loop() was busy with BLE (press never lost)
+volatile bool     candidate      = false;   // LOW edge seen, not yet confirmed
+volatile uint32_t candidateMs    = 0;
+volatile uint32_t lastHighMs     = 0;       // last time the pin went HIGH (released)
+volatile bool     pressLatched   = false;   // confirmed press waiting for loop()
+volatile uint32_t pressLatchedMs = 0;
+
+void IRAM_ATTR onButtonChange() {
+  const uint32_t t = millis();
+  if (digitalRead(SHUTTER_PIN) == LOW) {
+    if (!candidate && (uint32_t)(t - lastHighMs) >= RELEASE_STABLE_MS) {
+      candidate = true;
+      candidateMs = t;
+    }
+  } else {
+    // Released. If loop() was busy and the press lasted long enough, confirm it now.
+    if (candidate && (uint32_t)(t - candidateMs) >= PRESS_STABLE_MS) {
+      candidate = false;
+      pressLatched = true;
+      pressLatchedMs = candidateMs;
+    }
+    // A HIGH within 20 ms of the LOW is press bounce: keep the candidate, loop() decides.
+    lastHighMs = t;
+  }
+}
+
+// Called from loop(): confirm a held candidate after 20 ms, drop a glitch that went back HIGH.
+bool takePress(uint32_t &whenMs) {
+  const uint32_t now = millis();
+  const bool low = digitalRead(SHUTTER_PIN) == LOW;
+  noInterrupts();
+  if (candidate && (uint32_t)(now - candidateMs) >= PRESS_STABLE_MS) {
+    if (low) {                       // still held after 20 ms -> real press
+      pressLatched = true;
+      pressLatchedMs = candidateMs;
+    }                                // else: short glitch -> ignore
+    candidate = false;
+  }
+  const bool p = pressLatched;
+  whenMs = pressLatchedMs;
+  pressLatched = false;
+  interrupts();
+  return p;
+}
+
+uint32_t bootMs = 0;
+uint32_t lastConnectTryMs = 0;
+uint32_t lastShotMs = 0;
+bool lastLinkState = false;
+bool pendingShot = false;
+uint32_t pendingSinceMs = 0;
+
+// Watch the button from the very first ms of boot. Returns true if held for PAIR_HOLD_MS.
+bool pairingRequestedAtBoot() {
+  if (digitalRead(SHUTTER_PIN) == HIGH) return false;
+  const uint32_t t0 = millis();
+  while (millis() - t0 < PAIR_HOLD_MS) {
+    if (digitalRead(SHUTTER_PIN) == HIGH) {   // released early -> normal start
+      ledSet(false);
+      return false;
+    }
+    ledSet(((millis() - t0) / 80) & 1);       // fast blink while counting
+    delay(10);
+  }
+  ledSet(true);                               // solid = pairing mode accepted
+  return true;
+}
+
+void pairWithCamera() {
+  APP_PRINTLN("PAIRING MODE - open the camera's BR-E1 pairing screen now.");
+  uint32_t attempt = 0;
+  while (true) {
+    ++attempt;
+    ledSet(attempt & 1);   // LED toggles on every pairing attempt
+    const uint32_t startedMs = millis();
+    (void)startedMs;
+    const bool ok = cameraRemote.pair(PAIR_SCAN_SECONDS);
+    APP_PRINTF("[PAIR APP] attempt=%lu result=%s elapsed=%lu ms error=%s\n",
+                  (unsigned long)attempt, ok ? "OK" : "FAILED",
+                  (unsigned long)(millis() - startedMs), cameraRemote.getLastPairError());
+    if (ok) break;
+    delay(300);
+  }
+  APP_PRINTLN("Pairing done.");
+}
+
+void fireShot() {
+  const uint32_t t0 = millis();
+  APP_PRINTF("[APP] shot START (%lu ms after boot)\n", (unsigned long)(t0 - bootMs));
+  const bool sent = cameraRemote.trigger();
+  APP_PRINTF("[APP] shot END result=%s elapsed=%lu ms\n", sent ? "OK" : "FAILED",
+                (unsigned long)(millis() - t0));
+  lastShotMs = millis();
+  if (sent) {
+    ledSet(false); delay(120); ledSet(true);                                            // short blink = sent
+  } else {
+    for (int i = 0; i < 3; ++i) { ledSet(true); delay(100); ledSet(false); delay(100); } // 3 blinks = failed
+  }
+}
+
+void setup() {
+  bootMs = millis();
+  pinMode(SHUTTER_PIN, INPUT_PULLUP);
+  pinMode(LED_BUILTIN, OUTPUT);
+  ledSet(false);
+
+  // Decide pairing FIRST (before anything slow), so a short hold at switch-on is enough.
+  const bool pairOnBoot = pairingRequestedAtBoot();
+
+  Serial.begin(115200);
+#if ARDUINO_USB_CDC_ON_BOOT && ARDUINO_USB_MODE
+  Serial.setTxTimeoutMs(0);   // never block on USB-CDC when no PC is attached
+#endif
+
+  cameraRemote.init();
+
+  if (pairOnBoot) {
+    pairWithCamera();
+    while (digitalRead(SHUTTER_PIN) == LOW) delay(10);   // wait for release after pairing
+    delay(DEBOUNCE_MS);
+  } else {
+    APP_PRINTF("Paired camera: %s\n", cameraRemote.getPairedAddressString().c_str());
+  }
+
+  // From here on every press is captured by the interrupt, even while connecting.
+  lastHighMs = millis();
+  attachInterrupt(digitalPinToInterrupt(SHUTTER_PIN), onButtonChange, CHANGE);
+
+  lastLinkState = cameraRemote.ensureConnected();
+  lastConnectTryMs = millis();
+  ledSet(lastLinkState);
+  APP_PRINTF("[LINK] %s (%lu ms after boot)\n", lastLinkState ? "camera connected" : "camera not reachable",
+                (unsigned long)(millis() - bootMs));
+}
+
+void loop() {
+  const uint32_t now = millis();
+
+  // 1) collect a button press (latched by the interrupt)
+  uint32_t pressMs;
+  if (takePress(pressMs)) {
+    APP_PRINTF("[BUTTON] pressed (%lu ms after boot)\n", (unsigned long)(pressMs - bootMs));
+    pendingShot = true;
+    pendingSinceMs = pressMs;
+  }
+  if (pendingShot && (uint32_t)(now - pendingSinceMs) > PENDING_PRESS_MAX_MS) {
+    APP_PRINTLN("[BUTTON] queued press expired (camera not reachable)");
+    pendingShot = false;
+  }
+
+  // 2) link supervision
+  const bool linked = cameraRemote.isConnected();
+  if (linked != lastLinkState) {
+    lastLinkState = linked;
+    APP_PRINTF("[LINK] camera %s\n", linked ? "connected" : "disconnected");
+  }
+  ledSet(linked);
+
+  // 3) fire a queued press as soon as possible (trigger() connects by itself if needed)
+  if (pendingShot && (uint32_t)(now - lastShotMs) >= SHUTTER_INTERVAL_MS) {
+    pendingShot = false;
+    fireShot();
+    lastConnectTryMs = millis();
+    return;
+  }
+
+  // 4) keep reconnecting while idle so the next press is instant
+  if (!linked && (uint32_t)(now - lastConnectTryMs) >= RECONNECT_INTERVAL_MS) {
+    lastConnectTryMs = now;
+    cameraRemote.ensureConnected();
+    lastConnectTryMs = millis();
+  }
+  delay(5);
+}

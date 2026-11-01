@@ -1,0 +1,474 @@
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows.Threading;
+using EDSDKLib;
+
+namespace ThreeScreen;
+
+public sealed class CanonCamera : IAsyncDisposable
+{
+    private readonly string root;
+    private readonly CompanionCamera companion;
+    private readonly LinkedShutter linkedShots = new();
+    public event Action<byte[], string, string>? CompanionPhoto;
+    public event Action<string>? CompanionStatus;
+    private string? captureFolder;
+    private readonly Thread thread;
+    private readonly TaskCompletionSource<Dispatcher> ready = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    private readonly TaskCompletionSource finished = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    private readonly EDSDK.EdsObjectEventHandler objectHandler;
+    private readonly EDSDK.EdsStateEventHandler stateHandler;
+    private readonly HashSet<string> completed = new(), jpegShots = new();
+    private readonly CaptureLease lease;
+    private Dispatcher? dispatcher;
+    private DispatcherTimer? reconnect, events, heartbeat;
+    private string? lastStatus;
+    private string model = "미러리스";
+    private string detectedSummary = "미러리스: 검색 중 / EOS 200D: 검색 중";
+    private string? preparationError;
+    private IntPtr camera;
+    private bool initialized, stopping, sessionOpen, downloading, cameraSaveRestored;
+    private int pendingTransfers;
+    private volatile bool portInUse;
+    public bool CanStart => lease.Phase == CapturePhase.Locked && !portInUse;
+    private DateTime nextLockAttempt;
+    public string DogName = "";
+    public int RemainingSeconds => lease.RemainingSeconds;
+    public CapturePhase Phase => lease.Phase;
+    public event Action<string>? Status;
+    public event Action<string, bool>? ConnectionState;
+    public event Action<byte[], string, string>? Photo;
+    public event Action<CapturePhase>? CaptureChanged;
+    public event Action<string>? FileSaved;
+
+    [DllImport("EDSDK.dll", CallingConvention = CallingConvention.StdCall)]
+    internal static extern uint EdsGetEvent();
+    public CanonCamera(string photoRoot)
+    {
+        root = photoRoot;
+        companion = new CompanionCamera((evt, item, ctx) => OnTransfer(evt, item, true),
+            (evt, param, ctx) => { if (evt == EDSDK.StateEvent_Shutdown) dispatcher?.BeginInvoke(new Action(() => LostCamera("EOS 200D"))); return 0; });
+        objectHandler = OnObject; stateHandler = OnState;
+        lease = new CaptureLease(EnableHost, RestoreAndClose);
+        thread = new Thread(Run) { IsBackground = true, Name = "ShineMungSM1001.EDSDK.STA" };
+        thread.SetApartmentState(ApartmentState.STA);
+    }
+    public void Start() => thread.Start();
+    private async Task<Dispatcher> Worker()
+    {
+        var d = await ready.Task;
+        if (finished.Task.IsCompleted || d.HasShutdownStarted) throw new InvalidOperationException("SDK가 종료되었습니다. 앱을 다시 실행하세요.");
+        return d;
+    }
+    public async Task<bool> StartCaptureAsync(string? sessionFolder = null)
+    {
+        try
+        {
+            var d = await Worker();
+            return await d.InvokeAsync(() =>
+            {
+                if (stopping || lease.Active) return false;
+                try
+                {
+                    if (camera == IntPtr.Zero) Discover();
+                    if (camera == IntPtr.Zero) throw new InvalidOperationException("카메라가 연결되지 않았습니다.");
+                    if (lease.Phase != CapturePhase.Locked) lease.Lock();
+                    // Check the destination before allowing cardless shooting.
+                    captureFolder = sessionFolder ?? StoragePaths.CreateSessionFolder(root, DogName, DateTime.Now);
+                    Directory.CreateDirectory(captureFolder);
+                    var probe = Path.Combine(captureFolder, Guid.NewGuid().ToString("N") + ".write-test");
+                    using (var file = new FileStream(probe, FileMode.CreateNew, FileAccess.Write, FileShare.None, 1, FileOptions.DeleteOnClose)) file.WriteByte(0);
+                    lease.Start(); NotifyPhase();
+                    Report("촬영 허용 · SaveTo.Host · 20분 후 Camera 복원 및 세션 종료");
+                    return true;
+                }
+                catch (Exception ex) { NotifyPhase(); Report("촬영 시작 실패 · " + ex.Message); return false; }
+            });
+        }
+        catch (Exception ex) { Report(ex.Message); return false; }
+    }
+    public async Task ReconnectAsync()
+    {
+        try
+        {
+            var d = await Worker();
+            await d.InvokeAsync(() =>
+            {
+                if (lease.Active) { Report("촬영 중 · 남은 시간은 연장되지 않습니다"); return; }
+                if (!sessionOpen && !downloading && pendingTransfers == 0) { ReleaseCamera(); lease.MarkUnavailable(); cameraSaveRestored = false; }
+                Discover();
+            });
+        }
+        catch (Exception ex) { Report(ex.Message); }
+    }
+    public async Task<bool> LockCaptureAsync()
+    {
+        try
+        {
+            var d = await Worker();
+            return await d.InvokeAsync(() =>
+            {
+                if (camera == IntPtr.Zero) return !lease.HasStarted;
+                if (lease.Phase == CapturePhase.Locked) return true;
+                EnforceLock();
+                return lease.Phase == CapturePhase.Locked;
+            });
+        }
+        catch (Exception ex) { Report("카메라 촬영 준비 확인 실패 · " + ex.Message); return !lease.HasStarted; }
+    }
+    private void Run()
+    {
+        dispatcher = Dispatcher.CurrentDispatcher; ready.TrySetResult(dispatcher);
+        try
+        {
+            Report("EDSDK 초기화 중 · Canon USB 카메라 검색");
+            Check(EDSDK.EdsInitializeSDK(), "EDSDK 초기화"); initialized = true;
+            Discover();
+            events = new DispatcherTimer(TimeSpan.FromMilliseconds(25), DispatcherPriority.Send, (_, _) => Pump(), dispatcher);
+            reconnect = new DispatcherTimer(TimeSpan.FromSeconds(5), DispatcherPriority.Background, (_, _) => Discover(), dispatcher);
+            heartbeat = new DispatcherTimer(TimeSpan.FromSeconds(30), DispatcherPriority.Background, (_, _) => KeepAlive(), dispatcher);
+            heartbeat.Start(); events.Start(); reconnect.Start(); Dispatcher.Run();
+        }
+        catch (Exception ex) { Report("카메라 준비 실패 · " + ex.Message); }
+        finally
+        {
+            try
+            {
+                if (camera != IntPtr.Zero)
+                {
+                    try { if (lease.Phase != CapturePhase.Locked) lease.Lock(); } catch (Exception ex) { Report("종료 시 잠금 확인 실패 · " + ex.Message); }
+                    ReleaseCamera();
+                }
+                if (initialized) EDSDK.EdsTerminateSDK();
+            }
+            finally { finished.TrySetResult(); }
+        }
+    }
+    private void KeepAlive()
+    {
+        CheckDeadline();
+        if (stopping || camera == IntPtr.Zero || downloading || pendingTransfers > 0) return;
+        bool idle = lease.Phase == CapturePhase.Locked;
+        if (!idle && !lease.Active) return;
+        try
+        {
+            OpenSession();
+            if (idle) VerifySaveTo(EDSDK.EdsSaveTo.Camera);
+            Check(EDSDK.EdsSendCommand(camera, EDSDK.CameraCommand_ExtendShutDownTimer, 0), "카메라 절전 타이머 연장");
+            if (lease.Active) companion.KeepAlive();
+        }
+        catch (Exception ex) { Report("카메라 연결 확인 실패 · " + ex.Message); NotifyPhase(); }
+        finally
+        {
+            if (idle && sessionOpen) {
+                // Reassert Camera and verify it even when the heartbeat failed.
+                cameraSaveRestored = false; EnforceLock();
+            }
+            CheckDeadline();
+        }
+    }
+    private void OpenSession()
+    {
+        if (camera == IntPtr.Zero) throw new InvalidOperationException("카메라 미연결");
+        if (sessionOpen) return;
+        uint result = EDSDK.EdsOpenSession(camera);
+        portInUse = result == EDSDK.EDS_ERR_COMM_PORT_IS_IN_USE;
+        Check(result, portInUse ? model + " 통신 포트 사용 중 · EOS Utility를 트레이까지 종료해 주세요" : model + " 세션 열기"); sessionOpen = true;
+        Check(EDSDK.EdsSetObjectEventHandler(camera, EDSDK.ObjectEvent_All, objectHandler, IntPtr.Zero), "촬영 이벤트 등록");
+        Check(EDSDK.EdsSetCameraStateEventHandler(camera, EDSDK.StateEvent_All, stateHandler, IntPtr.Zero), "카메라 상태 등록");
+    }
+    private void EnableHost()
+    {
+        OpenSession(); cameraSaveRestored = false;
+        companion.Start();
+        Check(EDSDK.EdsSetPropertyData(camera, EDSDK.PropID_ImageQuality, 0, sizeof(uint), 0x00640013u), "미러리스 RAW+JPEG 설정");
+        Check(EDSDK.EdsGetPropertyData(camera, EDSDK.PropID_ImageQuality, 0, out uint quality), "미러리스 화질 확인");
+        if (quality != 0x00640013u) throw new InvalidOperationException("미러리스 RAW+JPEG 설정 불일치");
+        linkedShots.Reset();
+        Check(EDSDK.EdsSetPropertyData(camera, EDSDK.PropID_SaveTo, 0, sizeof(uint), (uint)EDSDK.EdsSaveTo.Host), "SaveTo.Host 설정");
+        Check(EDSDK.EdsSetCapacity(camera, new EDSDK.EdsCapacity { NumberOfFreeClusters = 0x7FFFFFFF, BytesPerSector = 0x1000, Reset = 1 }), "PC 저장 용량 설정");
+        VerifySaveTo(EDSDK.EdsSaveTo.Host);
+        completed.Clear(); jpegShots.Clear();
+    }
+    private void RestoreAndClose()
+    {
+        Exception? companionError = null;
+        try { companion.Restore(!downloading && pendingTransfers == 0); }
+        catch (Exception ex) { companionError = ex; }
+        OpenSession();
+        if (!cameraSaveRestored)
+        {
+            Check(EDSDK.EdsSetPropertyData(camera, EDSDK.PropID_SaveTo, 0, sizeof(uint), (uint)EDSDK.EdsSaveTo.Camera), "SaveTo.Camera 복원");
+            VerifySaveTo(EDSDK.EdsSaveTo.Camera);
+            cameraSaveRestored = true;
+            Report("SaveTo.Camera 복원 완료");
+        }
+        if (downloading || pendingTransfers > 0) throw new InvalidOperationException("시간 내 촬영된 사진 전송 완료 후 세션을 닫습니다");
+        if (companionError != null) throw companionError;
+        Check(EDSDK.EdsCloseSession(camera), "EdsCloseSession"); sessionOpen = false;
+        Report("EdsCloseSession 완료 · Host 촬영 허용 해제");
+    }
+    private void VerifySaveTo(EDSDK.EdsSaveTo expected)
+    {
+        Check(EDSDK.EdsGetPropertyData(camera, EDSDK.PropID_SaveTo, 0, out uint actual), "SaveTo 설정 확인");
+        if (actual != (uint)expected) throw new InvalidOperationException($"SaveTo 확인 불일치: {actual}, 예상 {(uint)expected}");
+    }
+    private void Discover()
+    {
+        if (stopping) return;
+        IntPtr list = IntPtr.Zero;
+        try
+        {
+            if (camera != IntPtr.Zero)
+            {
+                uint secondaryHealth = EDSDK.EdsGetPropertyData(companion.Handle, EDSDK.PropID_ProductName, 0, out string _);
+                if (secondaryHealth == EDSDK.EDS_ERR_DEVICE_NOT_FOUND || secondaryHealth == EDSDK.EDS_ERR_COMM_DISCONNECTED) { LostCamera("EOS 200D"); return; }
+                uint health = EDSDK.EdsGetPropertyData(camera, EDSDK.PropID_ProductName, 0, out string _);
+                if (health == EDSDK.EDS_ERR_DEVICE_NOT_FOUND || health == EDSDK.EDS_ERR_COMM_DISCONNECTED) { LostCamera(); return; }
+                if (lease.Active) return;
+            }
+            Check(EDSDK.EdsGetCameraList(out list), "카메라 검색");
+            Check(EDSDK.EdsGetChildCount(list, out int count), "카메라 수 확인");
+            if (count == 0)
+            {
+                if (camera != IntPtr.Zero) LostCamera();
+                detectedSummary = CameraDetection.Describe(Array.Empty<string>());
+                ConnectionState?.Invoke(detectedSummary, false);
+                Report("Canon이 검색되지 않습니다 · USB 연결 / 전원 확인"); return;
+            }
+            if (camera == IntPtr.Zero)
+            {
+                var primary = new List<IntPtr>(); var secondary = new List<IntPtr>();
+                var names = new List<string>();
+                try {
+                    for (int index=0; index<count; index++) {
+                        Check(EDSDK.EdsGetChildAtIndex(list, index, out var candidate), "카메라 선택");
+                        if (EDSDK.EdsGetDeviceInfo(candidate, out var device) != 0) { EDSDK.EdsRelease(candidate); continue; }
+                        names.Add(device.szDeviceDescription);
+                        if (CompanionCamera.IsMirrorless(device.szDeviceDescription)) primary.Add(candidate);
+                        else if (CompanionCamera.Is200D(device.szDeviceDescription)) secondary.Add(candidate);
+                        else EDSDK.EdsRelease(candidate);
+                    }
+                    detectedSummary = CameraDetection.Describe(names);
+                    Report(detectedSummary);
+                    if(primary.Count != 1 || secondary.Count != 1) throw new InvalidOperationException(detectedSummary);
+                    camera=primary[0]; companion.Handle=secondary[0]; primary.Clear(); secondary.Clear();
+                } finally { foreach(var item in primary) EDSDK.EdsRelease(item); foreach(var item in secondary) EDSDK.EdsRelease(item); }
+                Check(EDSDK.EdsGetDeviceInfo(camera, out var info), "카메라 정보"); model = info.szDeviceDescription;
+                cameraSaveRestored = false; lease.MarkUnavailable();
+            }
+            if (lease.Phase != CapturePhase.Locked || portInUse) EnforceLock();
+            else NotifyPhase(); // detection only; do not reopen a successfully closed session
+        }
+        catch (Exception ex) { ConnectionState?.Invoke(ex.Message, false); Report(ex.Message); }
+        finally { if (list != IntPtr.Zero) EDSDK.EdsRelease(list); }
+    }
+    private void NotifyPhase()
+    {
+        CaptureChanged?.Invoke(lease.Phase);
+        if (preparationError != null) { ConnectionState?.Invoke(detectedSummary + "\n" + preparationError, false); return; }
+        ConnectionState?.Invoke(lease.Phase switch
+        {
+            CapturePhase.Active => detectedSummary + " · 촬영 가능 (Host)",
+            CapturePhase.Locked => detectedSummary + " · 촬영 대기",
+            _ => model + " · 촬영 준비 확인 중 · 연결 재시도"
+        }, lease.Active || lease.Phase == CapturePhase.Locked);
+    }
+    private void EnforceLock()
+    {
+        try { lease.Lock(); preparationError = null; }
+        catch (Exception ex) { preparationError = ex.Message; Report("촬영 준비 미완료 · " + ex.Message + " · 자동 재시도"); }
+        finally { nextLockAttempt = DateTime.UtcNow.AddSeconds(1); NotifyPhase(); }
+    }
+    private void CheckDeadline()
+    {
+        if (!lease.Active || lease.RemainingSeconds > 0) return;
+        try { lease.Tick(); }
+        catch (Exception ex) { Report("촬영 시간 종료 · 잠금 처리 중 · " + ex.Message); }
+        finally { nextLockAttempt = DateTime.UtcNow.AddSeconds(1); NotifyPhase(); }
+    }
+    private void Pump()
+    {
+        try
+        {
+            CheckDeadline(); // camera deadline is independent of WPF's UI timer
+            if (!stopping && camera != IntPtr.Zero && (lease.Phase is CapturePhase.NeedsLock or CapturePhase.LockFailed) && DateTime.UtcNow >= nextLockAttempt) EnforceLock();
+            Check(EdsGetEvent(), "촬영 이벤트 수신");
+        }
+        catch (Exception ex) { Report(ex.Message); }
+    }
+    private void LostCamera() => LostCamera(model);
+    private void LostCamera(string disconnected)
+    {
+        lease.MarkUnavailable();
+        try { RestoreAndClose(); } catch(Exception ex) { Report("연결 오류 후 미러/저장 복원 실패 · " + ex.Message); }
+        if (pendingTransfers == 0) ReleaseCamera();
+        cameraSaveRestored = false;
+        CaptureChanged?.Invoke(lease.Phase);
+        ConnectionState?.Invoke(disconnected + " 연결 끊김 · 촬영 허용 해제", false);
+        Report("연결 끊김 · 카메라 설정 복원은 재연결 후 확인 · 자동 Host 재개 안 함");
+    }
+    private uint OnState(uint evt, uint parameter, IntPtr context)
+    {
+        try
+        {
+            if (evt == EDSDK.StateEvent_WillSoonShutDown && sessionOpen && camera != IntPtr.Zero)
+                Check(EDSDK.EdsSendCommand(camera, EDSDK.CameraCommand_ExtendShutDownTimer, 0), "카메라 절전 타이머 연장");
+            if (evt == EDSDK.StateEvent_Shutdown) dispatcher?.BeginInvoke(new Action(LostCamera));
+        }
+        catch (Exception ex) { Report(ex.Message); }
+        return EDSDK.EDS_ERR_OK;
+    }
+    private uint OnObject(uint evt, IntPtr item, IntPtr context)
+        => OnTransfer(evt, item, false);
+    private uint OnTransfer(uint evt, IntPtr item, bool secondary)
+    {
+        if (item == IntPtr.Zero) return EDSDK.EDS_ERR_OK;
+        try
+        {
+            // Finish transfers from a just-expired shot too: without a card, the PC is its only copy.
+            if (evt == EDSDK.ObjectEvent_DirItemRequestTransfer)
+            {
+                string dog = DogName;
+                long receivedAt = Stopwatch.GetTimestamp();
+                pendingTransfers++;
+                dispatcher!.BeginInvoke(DispatcherPriority.Send, new Action(() => {
+                    if (EDSDK.EdsGetDirectoryItemInfo(item, out var shot) == 0) {
+                        if(linkedShots.Accept(secondary, lease.Active, shot.szFileName, shot.dateTime)) {
+                            try {
+                                long commandAt = Stopwatch.GetTimestamp();
+                                companion.Trigger();
+                                Report($"200D 셔터 명령 · 이벤트→명령 {Stopwatch.GetElapsedTime(receivedAt, commandAt).TotalMilliseconds:F0}ms · 명령 처리 {Stopwatch.GetElapsedTime(commandAt).TotalMilliseconds:F0}ms (실제 노출 시차 아님)");
+                                CompanionStatus?.Invoke("EOS 200D · 셔터 전송 완료 · 사진 수신 대기");
+                            }
+                            catch(Exception ex) { CompanionStatus?.Invoke("EOS 200D · 연동 실패 · " + ex.Message); Report("200D 연동 촬영 실패 · " + ex.Message); }
+                        }
+                    }
+                    dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() => Download(item, dog, secondary)));
+                }));
+                return EDSDK.EDS_ERR_OK;
+            }
+        }
+        catch (Exception ex) { Report(ex.Message); }
+        EDSDK.EdsRelease(item); return EDSDK.EDS_ERR_OK;
+    }
+    private void Download(IntPtr item, string dog, bool secondary)
+    {
+        downloading = true;
+        IntPtr stream = IntPtr.Zero;
+        bool transferStarted = false, transferComplete = false;
+        try
+        {
+            Check(EDSDK.EdsGetDirectoryItemInfo(item, out var info), "사진 정보");
+            if (info.isFolder != 0) { EDSDK.EdsDownloadCancel(item); return; }
+            string extension = Path.GetExtension(info.szFileName).ToLowerInvariant();
+            if (extension is not (".jpg" or ".jpeg" or ".cr2" or ".cr3" or ".crw")) { EDSDK.EdsDownloadCancel(item); return; }
+            string key = $"{secondary}:{info.szFileName}:{info.Size}:{info.dateTime}:{info.GroupID}";
+            if (completed.Contains(key)) { EDSDK.EdsDownloadCancel(item); return; }
+            Report("사진 다운로드 중 · " + info.szFileName);
+            Check(EDSDK.EdsCreateMemoryStream(0, out stream), "다운로드 메모리");
+            transferStarted = true;
+            ulong left = info.Size;
+            while (left > 0)
+            {
+                CheckDeadline(); // enforce at chunk boundaries rather than after a whole large RAW file
+                ulong chunk = Math.Min(left, 1024UL * 1024);
+                Check(EDSDK.EdsDownload(item, chunk, stream), "사진 다운로드");
+                left -= chunk;
+            }
+            byte[] data = ReadStream(stream);
+            var safeName = string.Join("_", dog.Split(Path.GetInvalidFileNameChars())).Trim().TrimEnd('.');
+            if (safeName.Length > 60) safeName = safeName[..60];
+            if (string.IsNullOrWhiteSpace(safeName)) safeName = "강아지";
+            var folder = captureFolder ?? throw new InvalidOperationException("촬영 저장 폴더가 지정되지 않았습니다.");
+            Directory.CreateDirectory(folder);
+            var path = Path.Combine(folder, (secondary ? "200D_" : "Mirrorless_") + DateTime.Now.ToString("HHmmss_fff") + "_" + Guid.NewGuid().ToString("N")[..8] + extension);
+            File.WriteAllBytes(path + ".partial", data);
+            File.Move(path + ".partial", path);
+            FileSaved?.Invoke(path);
+            Check(EDSDK.EdsDownloadComplete(item), "다운로드 완료");
+            transferComplete = true;
+            completed.Add(key);
+            string shotKey = $"{secondary}:{Path.GetFileNameWithoutExtension(info.szFileName)}:{info.dateTime}:{info.GroupID}";
+            if (extension is not (".jpg" or ".jpeg"))
+            {
+                // Both cameras are configured for RAW+JPEG. Display the JPEG only;
+                // requesting an extra RAW thumbnail blocks the shared SDK and fails on 200D.
+                Report("RAW 원본 저장 완료 · JPEG로 화면 표시");
+                return;
+            }
+            else jpegShots.Add(shotKey);
+            if (secondary) { CompanionPhoto?.Invoke(data, path, dog); CompanionStatus?.Invoke("EOS 200D · " + Path.GetFileName(path)); } else Photo?.Invoke(data, path, dog);
+            Report("PC 복사 완료 · " + path);
+        }
+        catch (Exception ex) { Report("사진 저장 실패 · " + ex.Message + " · 카드 없는 Host 촬영이므로 저장 파일을 확인하세요"); }
+        finally
+        {
+            if (transferStarted && !transferComplete) EDSDK.EdsDownloadCancel(item);
+            if (stream != IntPtr.Zero) EDSDK.EdsRelease(stream);
+            EDSDK.EdsRelease(item);
+            downloading = false;
+            pendingTransfers = Math.Max(0, pendingTransfers - 1);
+            CheckDeadline();
+            if (!lease.Active && camera != IntPtr.Zero && lease.Phase != CapturePhase.Locked) EnforceLock();
+        }
+    }
+    private static byte[] ReadStream(IntPtr stream)
+    {
+        Check(EDSDK.EdsGetLength(stream, out ulong length), "사진 크기");
+        Check(EDSDK.EdsGetPointer(stream, out IntPtr ptr), "사진 메모리");
+        var bytes = new byte[checked((int)length)];
+        Marshal.Copy(ptr, bytes, 0, bytes.Length);
+        return bytes;
+    }
+    private static void Check(uint code, string operation)
+    {
+        if (code != EDSDK.EDS_ERR_OK) throw new InvalidOperationException($"{operation}: 0x{code:X8}");
+    }
+    private void Report(string message)
+    {
+        if (message == lastStatus) return;
+        lastStatus = message;
+        try
+        {
+            var folder = Path.GetDirectoryName(Settings.FilePath)!;
+            Directory.CreateDirectory(folder);
+            File.AppendAllText(Path.Combine(folder, "camera.log"), $"{DateTime.Now:O} {message}{Environment.NewLine}");
+        }
+        catch { }
+        Status?.Invoke(message);
+    }
+    private void ReleaseCamera()
+    {
+        try { companion.Release(); } catch(Exception ex) { Report("200D 미러 복원 확인 필요 · " + ex.Message); }
+        if (camera == IntPtr.Zero) return;
+        if (sessionOpen) EDSDK.EdsCloseSession(camera);
+        EDSDK.EdsRelease(camera);
+        camera = IntPtr.Zero; sessionOpen = false;
+    }
+    public async ValueTask DisposeAsync()
+    {
+        var d = await ready.Task;
+        if (!finished.Task.IsCompleted && thread.IsAlive && !d.HasShutdownStarted)
+        {
+            var stop = d.InvokeAsync(() =>
+            {
+                stopping = true; reconnect?.Stop(); heartbeat?.Stop();
+                if (camera != IntPtr.Zero) EnforceLock();
+            }, DispatcherPriority.Send).Task;
+            await Task.WhenAny(stop, finished.Task);
+            if (finished.Task.IsCompleted) return;
+            // Shutdown at idle drains queued downloads and releases their references first.
+            await d.InvokeAsync(() => events?.Stop(), DispatcherPriority.Background);
+            d.BeginInvokeShutdown(DispatcherPriority.ApplicationIdle);
+            await finished.Task;
+        }
+    }
+}
+
+

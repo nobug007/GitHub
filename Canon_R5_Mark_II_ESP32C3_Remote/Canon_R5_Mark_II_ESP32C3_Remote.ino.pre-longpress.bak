@@ -1,0 +1,83 @@
+/*
+  Canon EOS R5 Mark II BLE shutter remote
+  Board  : ESP32-C3
+  Button : GPIO4 --- tact switch --- GND
+
+  Normal boot               : press button to release shutter
+  Boot while holding button : enter camera pairing mode
+*/
+
+#include <Arduino.h>
+#include <CanonBLERemote.h>
+
+constexpr uint8_t SHUTTER_PIN = 1;
+constexpr uint32_t DEBOUNCE_MS = 35;
+constexpr uint32_t PAIR_SCAN_SECONDS = 10;
+
+CanonBLERemote cameraRemote("ESP32-C3 Canon Remote");
+
+bool stableButtonState = HIGH;
+bool lastReading = HIGH;
+uint32_t lastChangeMs = 0;
+
+void pairWithCamera() {
+  Serial.println("PAIRING MODE");
+  Serial.println("Open the camera's BR-E1 pairing screen now.");
+
+  while (!cameraRemote.pair(PAIR_SCAN_SECONDS)) {
+    Serial.println("Camera not found. Retrying...");
+    delay(500);
+  }
+
+  Serial.println("Pairing completed.");
+
+  // Do not treat the button held during boot as a shutter press.
+  while (digitalRead(SHUTTER_PIN) == LOW) {
+    delay(10);
+  }
+  stableButtonState = HIGH;
+  lastReading = HIGH;
+}
+
+void setup() {
+  Serial.begin(115200);
+  delay(300);
+
+  pinMode(SHUTTER_PIN, INPUT_PULLUP);
+  cameraRemote.init();
+  delay(500);
+
+  // Hold the only button while powering/resetting to pair a new camera.
+  if (digitalRead(SHUTTER_PIN) == LOW) {
+    pairWithCamera();
+  } else {
+    Serial.println("READY - press the button to take a picture.");
+  }
+}
+
+void loop() {
+  const bool reading = digitalRead(SHUTTER_PIN);
+
+  if (reading != lastReading) {
+    lastChangeMs = millis();
+    lastReading = reading;
+  }
+
+  if ((millis() - lastChangeMs) >= DEBOUNCE_MS &&
+      reading != stableButtonState) {
+    stableButtonState = reading;
+
+    // Trigger once on the HIGH -> LOW edge.
+    if (stableButtonState == LOW) {
+      Serial.println("Shutter pressed");
+
+      if (cameraRemote.trigger()) {
+        Serial.println("Shot command sent");
+      } else {
+        Serial.println("ERROR: camera connection/trigger failed");
+      }
+    }
+  }
+
+  delay(2);
+}

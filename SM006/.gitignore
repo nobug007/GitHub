@@ -1,0 +1,10 @@
+bin/
+obj/
+.vs/
+lib/**/*.dll
+artifacts/
+tools/rclone.exe
+tools/rclone.zip
+tools/unpacked/
+*.log
+*.conf
